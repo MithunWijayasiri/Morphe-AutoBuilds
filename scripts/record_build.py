@@ -15,25 +15,46 @@ from pathlib import Path
 
 REC_DIR = Path("build_records")
 
+# Known architecture tokens that may appear in the APK filename
+KNOWN_ARCHES = ("arm64-v8a", "armeabi-v7a", "x86_64", "x86", "universal")
+
+
+def detect_arch_from_filename(apk_name: str, default: str = "universal") -> str:
+    """APK files are named like {app}-{arch}-{name}-v{version}.apk.
+    Try to detect the arch token from the filename."""
+    if not apk_name:
+        return default
+    base = apk_name.lower()
+    for a in KNOWN_ARCHES:
+        # match -arch- to avoid matching a substring inside another token
+        if f"-{a}-" in base or base.endswith(f"-{a}.apk"):
+            return a
+    return default
+
 
 def main() -> int:
     app = os.environ.get("APP_NAME", "").strip()
     src = os.environ.get("SOURCE", "").strip()
-    arch = os.environ.get("ARCH", "universal").strip() or "universal"
     apk_path = os.environ.get("APK_PATH", "").strip()
+    arch_env = os.environ.get("ARCH", "").strip()
 
     if not app or not src:
         print("APP_NAME / SOURCE missing; skipping manifest record")
         return 0
-    if not apk_path:
-        # No APK produced; record empty so we can still see this attempt
-        apk_name = ""
-    else:
-        apk_name = Path(apk_path).name
+
+    apk_name = Path(apk_path).name if apk_path else ""
+
+    # Prefer explicit ARCH env, otherwise detect from filename, fallback universal
+    arch = arch_env or detect_arch_from_filename(apk_name) or "universal"
 
     REC_DIR.mkdir(parents=True, exist_ok=True)
-    record = {"key": f"{app}|{src}|{arch}", "apk": apk_name,
-              "app_name": app, "source": src, "arch": arch}
+    record = {
+        "key": f"{app}|{src}|{arch}",
+        "apk": apk_name,
+        "app_name": app,
+        "source": src,
+        "arch": arch,
+    }
 
     safe = f"{app}__{src}__{arch}".replace("/", "_")
     fp = REC_DIR / f"{safe}.json"
