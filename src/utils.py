@@ -9,7 +9,8 @@ from src import gh
 from sys import exit
 import subprocess
 from pathlib import Path
-from urllib.parse import urlparse, unquote, parse_qs
+from urllib.parse import urlparse, unquote, parse_qs, quote
+from src import session
 
 def _parseparam(s):
     while s[:1] == ";":
@@ -287,6 +288,112 @@ def gh_api_request(endpoint: str) -> dict:
     except Exception as e:
         logging.debug(f"gh api {endpoint} failed: {e}")
         raise
+
+
+def fetch_json(url: str, headers: dict | None = None) -> dict | list:
+    response = session.get(url, headers=headers or {})
+    response.raise_for_status()
+    return response.json()
+
+
+def normalize_source_entry(entry: dict) -> dict:
+    provider = (entry.get("provider") or "github").lower().strip()
+    tag = (entry.get("tag") or "latest").strip() or "latest"
+
+    if provider in ("github", "codeberg"):
+        user = (entry.get("user") or "").strip()
+        repo = (entry.get("repo") or "").strip()
+        if not user or not repo:
+            raise ValueError(f"{provider} source entries require user and repo")
+        return {
+            "provider": provider,
+            "tag": tag,
+            "user": user,
+            "repo": repo,
+            "identity": f"{user}/{repo}",
+        }
+
+    if provider == "gitlab":
+        project = (entry.get("project") or "").strip()
+        if not project:
+            raise ValueError("gitlab source entries require project")
+        return {
+            "provider": provider,
+            "tag": tag,
+            "project": project,
+            "identity": project,
+        }
+
+    raise ValueError(f"Unsupported source provider: {provider}")
+
+
+def normalize_release(tag_name: str, published_at: str, assets: list[dict]) -> dict:
+    return {
+        "tag_name": tag_name or "?",
+        "published_at": published_at or "?",
+        "assets": [
+            {
+                "name": asset.get("name", ""),
+                "browser_download_url": asset.get("browser_download_url")
+                or asset.get("direct_asset_url")
+                or asset.get("url", ""),
+            }
+            for asset in assets
+            if asset.get("name")
+        ],
+    }
+
+
+def detect_release(entry: dict) -> dict:
+    normalized = normalize_source_entry(entry)
+    provider = normalized["provider"]
+
+    if provider == "github":
+        release = detect_github_release(normalized["user"], normalized["repo"], normalized["tag"])
+        return normalize_release(
+            release.get("tag_name"),
+            release.get("published_at") or release.get("created_at"),
+            release.get("assets") or [],
+        )
+
+    if provider == "gitlab":
+        return detect_gitlab_release(normalized["project"], normalized["tag"])
+
+    if provider == "codeberg":
+        return detect_codeberg_release(normalized["user"], normalized["repo"], normalized["tag"])
+
+    raise ValueError(f"Unsupported source provider: {provider}")
+
+
+def detect_gitlab_release(project: str, tag: str) -> dict:
+    encoded = quote(project, safe="")
+    if tag == "latest":
+        data = fetch_json(f"https://gitlab.com/api/v4/projects/{encoded}/releases/permalink/latest")
+    elif tag in ("", "dev", "prerelease"):
+        releases = fetch_json(f"https://gitlab.com/api/v4/projects/{encoded}/releases")
+        if not isinstance(releases, list) or not releases:
+            raise ValueError(f"No releases found for GitLab project {project}")
+        data = releases[0]
+    else:
+        data = fetch_json(f"https://gitlab.com/api/v4/projects/{encoded}/releases/{quote(tag, safe='')}")
+
+    assets = (data.get("assets") or {}).get("links") or []
+    return normalize_release(data.get("tag_name"), data.get("released_at"), assets)
+
+
+def detect_codeberg_release(user: str, repo: str, tag: str) -> dict:
+    base = f"https://codeberg.org/api/v1/repos/{user}/{repo}/releases"
+    if tag == "latest":
+        data = fetch_json(f"{base}/latest")
+    elif tag in ("", "dev", "prerelease"):
+        releases = fetch_json(base)
+        if not isinstance(releases, list) or not releases:
+            raise ValueError(f"No releases found for Codeberg repo {user}/{repo}")
+        data = releases[0]
+    else:
+        data = fetch_json(f"{base}/tags/{quote(tag, safe='')}")
+
+    return normalize_release(data.get("tag_name"), data.get("published_at"), data.get("assets") or [])
 
 def detect_github_release(user: str, repo: str, tag: str) -> dict:
     if tag == "latest":
