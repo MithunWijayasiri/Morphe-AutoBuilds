@@ -25,10 +25,7 @@ bucket_name = os.getenv('BUCKET_NAME')
 base_url = "https://www.apkmirror.com"
 
 if github_token:
-    # Safely log token info for debugging
-    token_len = len(github_token)
-    token_prefix = github_token[:4] if token_len > 4 else "???"
-    logging.info(f"GitHub token detected (length: {token_len}, prefix: {token_prefix}); using authenticated GitHub API client")
+    logging.info("GitHub token detected; using authenticated GitHub API client")
     gh = Github(github_token)
 else:
     if os.getenv("CI"):
