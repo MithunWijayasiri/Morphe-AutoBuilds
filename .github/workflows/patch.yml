@@ -76,6 +76,11 @@ jobs:
         run: |
           python scripts/validate_github_auth.py
 
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install requests beautifulsoup4
+
       - name: Run Incremental Update Check
         id: check
         env:
