@@ -340,6 +340,9 @@ jobs:
           
           ## 📱 Available Apps
           
+          <details>
+          <summary>Click to expand — app list</summary>
+          
           EOF
 
           while read -r filename; do
@@ -348,6 +351,8 @@ jobs:
           done < release_assets.txt
 
           cat >> release_notes.md << 'EOF'
+          </details>
+          
           ---
           
           ## ⚙️ Build Information

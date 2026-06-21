@@ -156,6 +156,10 @@ jobs:
           # Morphe APKs
           
           ## 📱 Available Apps
+          
+          <details>
+          <summary>Click to expand — app list</summary>
+          
           EOF
           
           # Sort and use 'unique' to remove duplicates in the text list
@@ -164,6 +168,8 @@ jobs:
           done
           
           cat >> release_notes.md << EOF
+          </details>
+          
           
           ---
           
