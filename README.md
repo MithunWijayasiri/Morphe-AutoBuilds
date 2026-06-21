@@ -131,7 +131,6 @@ git clone https://github.com/MithunWijayasiri/Morphe-AutoBuilds.git
 cd Morphe-AutoBuilds
 
 pip install -r requirements.txt
-pip install requests beautifulsoup4
 
 export APP_NAME="youtube"
 export SOURCE="morphe"

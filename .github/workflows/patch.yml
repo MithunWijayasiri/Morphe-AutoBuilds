@@ -82,7 +82,6 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install -r requirements.txt
-          pip install requests beautifulsoup4
 
       - name: Run Incremental Update Check
         id: check
@@ -163,7 +162,6 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install -r requirements.txt
-          pip install requests beautifulsoup4
 
       - name: Build APK
         env:

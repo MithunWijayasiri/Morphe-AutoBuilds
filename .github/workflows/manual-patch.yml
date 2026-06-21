@@ -76,7 +76,6 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install -r requirements.txt
-          pip install requests beautifulsoup4
       
       - name: Build APK
         env:
@@ -141,7 +140,7 @@ jobs:
           # 1. GENERATE FILE LIST FOR NOTES
           # We fetch the list of names via API so the release notes remain accurate
           # without needing to download the actual heavy APK files.
-          if [ "${{ steps.check-release.outputs.release_exists }}" == "true" ]; then
+          if [ "${{ steps.check-release.outputs.release_exists }}" = "true" ]; then
             gh release view latest --json assets --jq '.assets[].name' > current_assets.txt
           else
             touch current_assets.txt
@@ -177,7 +176,7 @@ jobs:
           EOF
           
           # 3. PERFORM UPDATE (CLOBBER) OR CREATE
-          if [ "${{ steps.check-release.outputs.release_exists }}" == "true" ]; then
+          if [ "${{ steps.check-release.outputs.release_exists }}" = "true" ]; then
             echo "⬆️ Uploading new assets (clobbering existing)..."
             # --clobber overwrites the file if it exists, adds it if it doesn't
             gh release upload latest *.apk --clobber
