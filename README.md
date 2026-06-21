@@ -51,7 +51,7 @@ All APKs rebuilt daily at 06:00 UTC.
 }
 ```
 
-`source` value maps to `sources/<source>.json`.
+`source` value maps to `sources/<source>.json`. The `sources/` directory contains patch-source definitions (tool repositories), separate from `apps/` which holds per-app download configs.
 
 ### Architecture matrix (`arch-config.json`)
 
@@ -67,9 +67,20 @@ All APKs rebuilt daily at 06:00 UTC.
 
 Absent entry → builds `["universal"]` only.
 
-### App config (`apps/apkmirror/youtube.json`)
+### App config (`apps/<platform>/<app>.json`)
 
-APKMirror format:
+Configs live under `apps/` organized by download mirror platform (not by patch source).
+
+| Platform | Directory |
+| :--- | :--- |
+| APKMirror | `apps/apkmirror/` |
+| APKPure | `apps/apkpure/` |
+| Uptodown | `apps/uptodown/` |
+| Aptoide | `apps/aptoide/` |
+
+Each app can have configs on multiple platforms — the pipeline tries them in order until one succeeds.
+
+APKMirror format (example at `apps/apkmirror/youtube.json`):
 
 ```json
 {
@@ -109,6 +120,12 @@ APKMirror format:
 - `zip` utility
 - `apksigner` (Android SDK Build-Tools)
 
+| Variable | Required | Description | Valid values |
+| :--- | :---: | :--- | :--- |
+| `APP_NAME` | ✅ Yes | App name (matches file in `apps/<platform>/<app>.json`) | Any configured app name |
+| `SOURCE` | ✅ Yes | Patch source (matches file in `sources/<source>.json`) | `morphe`, `revanced`, `piko`, etc. |
+| `ARCH` | ❌ No | Target architecture. Falls back to `arch-config.json`, then `"universal"`. | `arm64-v8a`, `armeabi-v7a`, `universal` |
+
 ```bash
 git clone https://github.com/MithunWijayasiri/Morphe-AutoBuilds.git
 cd Morphe-AutoBuilds
@@ -119,12 +136,10 @@ pip install requests beautifulsoup4
 export APP_NAME="youtube"
 export SOURCE="morphe"
 python -m src
-```
 
-Optional architecture override:
-
-```bash
-export ARCH="arm64-v8a"   # arm64-v8a, armeabi-v7a, universal
+# Optional architecture override (defaults from arch-config.json):
+export ARCH="arm64-v8a"
+python -m src
 ```
 
 ---
