@@ -229,17 +229,17 @@ def run_build(app_name: str, source: str, arch: str = "universal") -> str:
                 try:
                     morphe_cmd = [
                         "java", "-jar", str(cli),
-                        "patch", "--patches", str(patches),
+                        "patch", "--continue-on-error",
+                        "--patches", str(patches),
                         "--out", str(output_apk), str(input_apk),
                         *exclude_patches, *include_patches
                     ]
                     utils.run_process(morphe_cmd, capture=True, stream=True)
                 except subprocess.CalledProcessError as e:
-                    # Try alternative Morphe command format (same args but no patch subcommand)
                     logging.info("Trying alternative Morphe command format...")
                     morphe_cmd = [
                         "java", "-jar", str(cli),
-                        "patch",
+                        "patch", "--continue-on-error",
                         "--patches", str(patches),
                         "--out", str(output_apk), str(input_apk),
                         *exclude_patches, *include_patches
