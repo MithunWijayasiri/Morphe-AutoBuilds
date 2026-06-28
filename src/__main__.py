@@ -265,8 +265,8 @@ def run_build(app_name: str, source: str, arch: str = "universal") -> str:
                     ]
                     try:
                         utils.run_process(morphe_cmd, capture=True, stream=True)
-                    except subprocess.CalledProcessError as e2:
-                        raise e2 from e
+                    except subprocess.CalledProcessError:
+                        raise e
                 if patch_error is not None:
                     # Fallback path succeeded; clear the error so we don't retry.
                     patch_error = None
