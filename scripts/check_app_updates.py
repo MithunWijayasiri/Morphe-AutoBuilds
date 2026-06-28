@@ -24,8 +24,10 @@ previous always-build behavior so nothing breaks).
 """
 import os
 import sys
+import re
 import json
 import logging
+import importlib
 import subprocess
 import traceback
 from pathlib import Path
@@ -102,24 +104,76 @@ def load_arch_config() -> Dict[Tuple[str, str], List[str]]:
 def load_app_config_version(app_name: str) -> str:
     """Return the configured 'version' field from the first matching app config,
     or '' if none is pinned (means 'latest at build time')."""
+    cfg, _ = load_app_config(app_name)
+    return (cfg.get("version") or "").strip() if cfg else ""
+
+
+def load_app_config(app_name: str) -> Tuple[Optional[dict], Optional[str]]:
+    """Return (config_dict, platform) for the first platform that has an app
+    config file, or (None, None) if none exists. The platform name matches the
+    provider module (apkmirror/apkpure/uptodown/aptoide) so the caller can use it
+    to dispatch version lookups."""
     for platform in ("apkmirror", "apkpure", "uptodown", "aptoide"):
         fp = APPS_DIR / platform / f"{app_name}.json"
         if fp.exists():
             try:
                 with fp.open("r", encoding="utf-8") as f:
                     data = json.load(f)
-                return (data.get("version") or "").strip()
+                return data, platform
             except Exception:
                 continue
-    return ""
+    return None, None
+
+
+_latest_app_version_cache: Dict[str, str] = {}
+
+
+def fetch_latest_app_version(app_name: str) -> str:
+    """Query the app's store listing for the newest version currently published.
+
+    This lets plan_incremental() detect that a *new app version* shipped even
+    when the app config is pinned to "latest" (config 'version' == ''). Without
+    it, the only signals we had were the patch-source signature and the (empty)
+    config version, so apps that follow upstream's newest release never triggered
+    a rebuild.
+
+    Best-effort: any error (network, parse, missing module) returns '' rather
+    than raising, so a transient store outage never degrades to a full rebuild.
+    """
+    if app_name in _latest_app_version_cache:
+        return _latest_app_version_cache[app_name]
+
+    resolved = ""
+    config, platform = load_app_config(app_name)
+    if config and platform:
+        try:
+            import importlib
+            mod = importlib.import_module(f"src.{platform}")
+            get_latest = getattr(mod, "get_latest_version", None)
+            if callable(get_latest):
+                # Provider signatures vary slightly (some take arch), but all
+                # accept (app_name, config). Extra kwargs are not used.
+                ver = get_latest(app_name, config)
+                if isinstance(ver, str) and ver.strip():
+                    resolved = ver.strip()
+        except Exception as e:
+            logging.info(f"  latest-version probe failed for {app_name}/{platform}: {e}")
+            resolved = ""
+
+    _latest_app_version_cache[app_name] = resolved
+    return resolved
 
 
 # ---------------------------------------------------------------------------
 # Source-signature: detect when patch repos publish new releases
 # ---------------------------------------------------------------------------
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+# Also put this script's own dir on the path so we can reuse record_build's
+# filename-version parser (kept in one place so the two always agree).
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from src import utils as provider_utils
+from record_build import extract_version_from_filename
 
 _repo_sig_cache: Dict[Tuple[str, str, str, str], str] = {}
 
@@ -143,10 +197,41 @@ def fetch_repo_signature(user: str, repo: str, tag: str, provider: str = "github
         _repo_sig_cache[key] = sig
         return sig
     except Exception as e:
-        sig = f"err:{tag}"
+        # Sentinel format must contain '@err:' so that
+        # _is_unreliable_source_sig() (which looks for '@err:') treats this as an
+        # unreliable signature and plan_incremental() falls back to the old one.
+        sig = f"{tag}@err:{type(e).__name__}"
         _repo_sig_cache[key] = sig
         logging.warning(f"  {provider} api failed for {user}/{repo}: {e}")
         return sig
+
+
+def _fetch_default_branch_sha(user: str, repo: str) -> str:
+    """Fetch the latest commit SHA of the repo's default branch.
+
+    This makes the source signature sensitive to *any* upstream change, not just
+    GitHub Releases. Many patch authors push commits or create tags without a
+    Release object; some publish exclusively via pre-releases that ``/releases/
+    latest`` ignores. The default-branch SHA flips whenever new code lands, so a
+    rebuild is triggered even in those cases. Returns '' on failure (best-effort;
+    the release-based tokens still form a valid signature)."""
+    try:
+        rc, out, _ = run_gh(["api", f"repos/{user}/{repo}", "--jq", ".default_branch"])
+        if rc != 0 or not out.strip():
+            branch = "main"
+        else:
+            branch = out.strip()
+        rc, out, _ = run_gh([
+            "api", f"repos/{user}/{repo}/commits/{branch}", "--jq", ".sha"
+        ])
+        if rc == 0:
+            sha = out.strip()
+            if sha:
+                # Short SHA is plenty for change detection.
+                return sha[:12]
+    except Exception:
+        pass
+    return ""
 
 
 def _fetch_github_signature(user: str, repo: str, tag: str) -> str:
@@ -159,7 +244,21 @@ def _fetch_github_signature(user: str, repo: str, tag: str) -> str:
 
     rc, out, err = run_gh(["api", api])
     if rc != 0:
-        raise RuntimeError(f"gh api {api} failed: {err.strip()[:80]}")
+        # Some repos publish ONLY prereleases, so /releases/latest 404s. Fall
+        # back to the list endpoint and pick the most recent release of any kind.
+        if tag == "latest":
+            list_api = f"repos/{user}/{repo}/releases?per_page=10"
+            rc2, out2, err2 = run_gh(["api", list_api])
+            if rc2 == 0:
+                rc, out, err = rc2, out2, err2
+                api = list_api
+        if rc != 0:
+            # No release info at all (repo publishes via commits/tags only).
+            # Fall back to a commit-SHA-only signature so we still detect changes.
+            sha = _fetch_default_branch_sha(user, repo)
+            if sha:
+                return f"@|sha:{sha}"
+            raise RuntimeError(f"gh api {api} failed: {err.strip()[:80]}")
 
     data = json.loads(out)
 
@@ -169,7 +268,10 @@ def _fetch_github_signature(user: str, repo: str, tag: str) -> str:
         elif tag == "prerelease":
             data = [r for r in data if r.get("prerelease")]
         if not data:
-            raise RuntimeError(f"No releases found for {user}/{repo}")
+            # No releases of the requested kind; use commit SHA so the signature
+            # still moves when upstream changes instead of freezing forever.
+            sha = _fetch_default_branch_sha(user, repo)
+            return f"@|sha:{sha}" if sha else f"@|none"
         data.sort(key=lambda r: r.get("created_at", ""), reverse=True)
         rel = data[0]
     else:
@@ -196,13 +298,28 @@ def _fetch_github_signature(user: str, repo: str, tag: str) -> str:
             a_updated = (a.get("updated_at") or "").strip()
             size = str(a.get("size") or "").strip()
             # Keep this compact but sensitive to real changes.
-            token = digest or f"{size}@{a_updated}" or a_updated or size
+            # Prefer sha256 digest, else a (size, updated) composite, else either
+            # field on its own. (Previous code had a dead `or` chain: the middle
+            # operand was a non-empty f-string by construction.)
+            if digest:
+                token = digest
+            elif size and a_updated:
+                token = f"{size}@{a_updated}"
+            elif a_updated:
+                token = a_updated
+            else:
+                token = size
             asset_parts.append(f"{name}:{token}")
     asset_parts.sort()
     assets_sig = ",".join(asset_parts)
 
-    # Format: <tag>@<published>@<updated>|<assets_sig>
-    return f"{tag_name}@{published}@{updated}|{assets_sig}"
+    # Commit SHA of the default branch: detects commits/tags/prereleases that are
+    # not reflected in the Release object. Best-effort; '' if unavailable.
+    sha = _fetch_default_branch_sha(user, repo)
+    sha_part = f"|sha:{sha}" if sha else ""
+
+    # Format: <tag>@<published>@<updated>|<assets_sig><sha_part>
+    return f"{tag_name}@{published}@{updated}|{assets_sig}{sha_part}"
 
 
 def _fetch_gitlab_signature(project: str, tag: str) -> str:
@@ -239,6 +356,42 @@ def _fetch_codeberg_signature(user: str, repo: str, tag: str) -> str:
     return f"{tag_name}@{published}"
 
 
+def _fetch_bundle_signature(bundle_url: str) -> str:
+    """Compute a content-based signature for a bundle source.
+
+    Previously this was signed as a *static* `f"bundle:{url}"` string, which
+    never changes. So when a bundle published new patch/integration versions,
+    the signature stayed identical and `plan_incremental()` saw no change ->
+    no rebuild was triggered (even though new patches that support new app
+    versions had been published).
+
+    We now fetch the bundle JSON and build a signature from its contents so any
+    real change (new asset URL/size) flips the signature. Falls back to a static
+    sentinel on failure so we don't mask the issue by force-rebuilding every run.
+    """
+    try:
+        data = provider_utils.fetch_json(bundle_url)
+    except Exception as e:
+        logging.warning(f"  bundle fetch failed for {bundle_url}: {e}")
+        return f"bundle:{bundle_url}@err"
+
+    if not isinstance(data, dict):
+        return f"bundle:{bundle_url}@unparseable"
+
+    tokens: List[str] = []
+    for key in ("patches", "integrations"):
+        for item in data.get(key, []) or []:
+            if not isinstance(item, dict):
+                continue
+            url = (item.get("url") or "").strip()
+            name = (item.get("name") or "").strip()
+            if url or name:
+                tokens.append(f"{key}:{name}:{url}")
+    tokens.sort()
+    body = ",".join(tokens)
+    return f"bundle:{body}" if body else f"bundle:{bundle_url}@empty"
+
+
 _source_sig_cache: Dict[str, str] = {}
 
 
@@ -269,7 +422,7 @@ def get_source_signature(source: str) -> str:
         return sig
 
     if isinstance(data, dict) and "bundle_url" in data:
-        sig = f"bundle:{data['bundle_url']}"
+        sig = _fetch_bundle_signature(data["bundle_url"])
         _source_sig_cache[source] = sig
         return sig
 
@@ -280,21 +433,28 @@ def get_source_signature(source: str) -> str:
                 continue
             provider = (entry.get("provider") or "github").lower().strip()
             tag = entry.get("tag", "latest")
-            
-            if provider == "gitlab":
+
+            # An entry that carries NO repo identifiers (typically the [0]
+            # metadata slot, e.g. {"name": "piko-patches"}) is just the patch
+            # package's output name -- download_required() treats it the same way
+            # (uses it as `name`, downloads from the remaining entries). It is
+            # NOT a repo, so it contributes nothing to the signature and must be
+            # skipped. We only track entries that actually declare a repo, which
+            # keeps the signature honest about what gets downloaded.
+            has_github = bool(entry.get("user") and entry.get("repo"))
+            has_project = bool(entry.get("project"))
+            if provider == "gitlab" and has_project:
                 project = entry.get("project")
-                if project:
-                    parts.append(f"gitlab:{project}@{fetch_repo_signature('', project, tag, provider)}")
-            elif provider == "codeberg":
+                parts.append(f"gitlab:{project}@{fetch_repo_signature('', project, tag, provider)}")
+            elif provider == "codeberg" and has_github:
                 user = entry.get("user")
                 repo = entry.get("repo")
-                if user and repo:
-                    parts.append(f"codeberg:{user}/{repo}@{fetch_repo_signature(user, repo, tag, provider)}")
-            else:
+                parts.append(f"codeberg:{user}/{repo}@{fetch_repo_signature(user, repo, tag, provider)}")
+            elif provider == "github" and has_github:
                 user = entry.get("user")
                 repo = entry.get("repo")
-                if user and repo:
-                    parts.append(f"{user}/{repo}@{fetch_repo_signature(user, repo, tag, provider)}")
+                parts.append(f"{user}/{repo}@{fetch_repo_signature(user, repo, tag, provider)}")
+            # else: metadata-only entry (no repo) -> intentionally skipped.
 
     sig = ";".join(parts) if parts else f"empty:{source}"
     _source_sig_cache[source] = sig
@@ -420,6 +580,28 @@ def _recover_apk_from_release(app: str, arch: str, existing_apks: List[str]) -> 
     return candidates[-1] if candidates else ""
 
 
+def _is_newer_version(candidate: str, reference: str) -> bool:
+    """True if `candidate` is a strictly newer version than `reference`.
+
+    Uses src.utils.normalize_version for the comparison so build-number and
+    parenthesised-version conventions match what the build/download code uses.
+    Falls back to a plain string inequality if normalization yields nothing,
+    and returns False on any parse error (never triggers a rebuild on a guess).
+    """
+    try:
+        cand = provider_utils.normalize_version(candidate)
+        ref = provider_utils.normalize_version(reference)
+    except Exception:
+        return False
+    if not cand or not ref:
+        return False
+    # Pad to equal length so e.g. (4,0,0) vs (4,0,0,1) compare correctly.
+    n = max(len(cand), len(ref))
+    cand += [0] * (n - len(cand))
+    ref += [0] * (n - len(ref))
+    return cand > ref
+
+
 
 
 def plan_incremental(full_matrix: List[dict], old_manifest: Optional[dict],
@@ -446,11 +628,18 @@ def plan_incremental(full_matrix: List[dict], old_manifest: Optional[dict],
         if old and old_src_sig and _is_unreliable_source_sig(cur_src_sig):
             cur_src_sig = old_src_sig
         carried_apk = (old or {}).get("apk", "")
+        # built_version is the version actually shipped in the carried APK
+        # (populated post-build by record_build.py -> merge_manifest.py). Carry
+        # it forward so we can compare it against the store's newest version.
+        old_built_ver = (old or {}).get("built_version", "")
         if old:
             if not carried_apk or carried_apk not in existing_apk_set:
                 recovered = _recover_apk_from_release(app, arch, existing_apks)
                 if recovered:
                     carried_apk = recovered
+                    # Recovered filename carries its own version; re-derive it
+                    # rather than trusting the (possibly stale) stored value.
+                    old_built_ver = extract_version_from_filename(recovered)
 
         new_entries[mkey] = {
             "app_name": app,
@@ -461,6 +650,8 @@ def plan_incremental(full_matrix: List[dict], old_manifest: Optional[dict],
             # apk filename is filled in *after* build by the workflow; for now
             # carry over whatever the old manifest had so we know what to keep.
             "apk": carried_apk,
+            # Preserved verbatim; refreshed by the merge step after each build.
+            "built_version": old_built_ver,
         }
 
         reasons: List[str] = []
@@ -473,6 +664,18 @@ def plan_incremental(full_matrix: List[dict], old_manifest: Optional[dict],
                 reasons.append(f"app-version: {old.get('config_version','')!r}->{cur_app_ver!r}")
             if old.get("source_sig", "") != cur_src_sig:
                 reasons.append("patch-source-updated")
+            # New app version detection for apps pinned to "latest" (no pinned
+            # config version). When config_version is empty, the config_version
+            # compare above can never fire, so without this check a brand-new
+            # upstream release would be invisible to the planner and the stale
+            # APK would be carried forever. Compare the version we last built
+            # against the version the store is publishing right now.
+            if not cur_app_ver and old_built_ver:
+                latest_store_ver = fetch_latest_app_version(app)
+                if latest_store_ver and _is_newer_version(latest_store_ver, old_built_ver):
+                    reasons.append(
+                        f"new-version: built {old_built_ver!r} -> store {latest_store_ver!r}"
+                    )
             old_apk = carried_apk
             if old_apk and old_apk not in existing_apk_set:
                 reasons.append("apk-missing-from-release")

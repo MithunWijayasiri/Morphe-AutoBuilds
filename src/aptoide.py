@@ -1,44 +1,85 @@
 import base64
-from typing import Dict
+import logging
+from typing import Dict, Optional
 from src import session
 
 BASE_URL = "https://ws75.aptoide.com/api/7/"
 
-def get_latest_version(app_name: str, config: Dict) -> str:
+
+def _safe_get_json(url: str) -> Optional[dict]:
+    """Fetch JSON from Aptoide, returning None (with a warning) on any failure
+    instead of raising. This keeps the download chain resilient: a transient
+    API hiccup or an unexpected response shape degrades to 'try next platform'
+    rather than aborting the whole build."""
+    try:
+        res = session.get(url)
+        res.raise_for_status()
+        return res.json()
+    except Exception as e:
+        logging.debug(f"Aptoide request failed ({url}): {e}")
+        return None
+
+
+def get_latest_version(app_name: str, config: Dict) -> Optional[str]:
     package = config['package']
     arch = config.get('arch', 'universal')
     q = _get_q_param(arch)
     url = f"{BASE_URL}apps/search?query={package}&limit=1&trusted=true{q}"
-    res = session.get(url).json()
-    if res['datalist']['list']:
-        return res['datalist']['list'][0]['file']['vername']
-    raise ValueError(f"No version found for {package}")
 
-def get_download_link(version: str, app_name: str, config: Dict) -> str:
+    data = _safe_get_json(url) or {}
+    items = (((data.get("datalist") or {}).get("list")) or [])
+    if not items:
+        logging.warning(f"No Aptoide result for {package}")
+        return None
+    try:
+        return items[0]["file"]["vername"]
+    except (KeyError, IndexError, TypeError):
+        logging.warning(f"Aptoide response missing version for {package}")
+        return None
+
+
+def get_download_link(version: str, app_name: str, config: Dict) -> Optional[str]:
     package = config['package']
     arch = config.get('arch', 'universal')
     q = _get_q_param(arch)
 
     if version.lower() == "latest":
         url = f"{BASE_URL}apps/search?query={package}&limit=1&trusted=true{q}"
-        res = session.get(url).json()
-        return res['datalist']['list'][0]['file']['path']
+        data = _safe_get_json(url) or {}
+        items = (((data.get("datalist") or {}).get("list")) or [])
+        if not items:
+            logging.warning(f"No Aptoide result for {package}")
+            return None
+        try:
+            return items[0]["file"]["path"]
+        except (KeyError, IndexError, TypeError):
+            return None
 
     # Find vercode for specific version
     url_versions = f"{BASE_URL}listAppVersions?package_name={package}&limit=50{q}"
-    res_v = session.get(url_versions).json()
+    data = _safe_get_json(url_versions) or {}
+    items = (((data.get("datalist") or {}).get("list")) or [])
     vercode = None
-    for app in res_v['datalist']['list']:
-        if app['file']['vername'] == version:
-            vercode = app['file']['vercode']
-            break
+    for app in items:
+        try:
+            if app["file"]["vername"] == version:
+                vercode = app["file"]["vercode"]
+                break
+        except (KeyError, TypeError):
+            continue
     if not vercode:
-        raise ValueError(f"Version {version} not found for {package}")
+        logging.warning(f"Version {version} not found on Aptoide for {package}")
+        return None
 
     # Get meta with download path
     url_meta = f"{BASE_URL}getAppMeta?package_name={package}&vercode={vercode}{q}"
-    res_meta = session.get(url_meta).json()
-    return res_meta['data']['file']['path']
+    data = _safe_get_json(url_meta) or {}
+    try:
+        return data["data"]["file"]["path"]
+    except (KeyError, TypeError):
+        logging.warning(f"Aptoide meta missing download path for {package}@{vercode}")
+        return None
+
 
 def _get_q_param(arch: str) -> str:
     if arch == 'universal':

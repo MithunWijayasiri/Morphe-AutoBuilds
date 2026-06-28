@@ -36,6 +36,12 @@ def main() -> int:
                 continue
             key = rec.get("key")
             apk = rec.get("apk", "")
+            # resolved_version is the version actually embedded in the built APK
+            # filename (extracted by record_build.py). Propagate it as
+            # 'built_version' so check_app_updates.py can detect on the next run
+            # when a newer app version becomes available, even for apps whose
+            # config 'version' is empty (meaning "latest at build time").
+            resolved_version = (rec.get("resolved_version") or "").strip()
             if not key:
                 continue
             entry = entries.get(key)
@@ -48,11 +54,14 @@ def main() -> int:
                     "config_version": "",
                     "source_sig": "",
                     "apk": "",
+                    "built_version": "",
                 }
                 entries[key] = entry
             if apk:
                 entry["apk"] = apk
-            print(f"  merged {key} -> apk={apk!r}")
+            if resolved_version:
+                entry["built_version"] = resolved_version
+            print(f"  merged {key} -> apk={apk!r} built_version={resolved_version!r}")
 
     with open("manifest.json", "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)

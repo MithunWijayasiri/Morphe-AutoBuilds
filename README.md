@@ -148,25 +148,16 @@ python -m src
 
 ---
 
-## Contributing
-
-1. Fork the repo.
-2. Create a feature branch.
-3. Test locally (`python -m src` with your app's env vars).
-4. Open a pull request.
-
----
-
 ## Disclaimer
 
-These are automated builds using publicly available ReVanced/Morphe tools and patches. Not affiliated with any app developers. Use at your own risk.
+These are automated builds using publicly available ReVanced/Morphe tools and patches. Not affiliated with any app developers.
 
-**GmsCore / MicroG-RE** required for non-root patched apps to function. Download from [the official releases](https://github.com/revanced/gmscore/releases/latest).
+**MicroG-RE** required for non-root patched apps to function. Download from [the official releases](https://github.com/MorpheApp/MicroG-RE/releases/latest).
 
 ---
 
 <div align="center">
 
-**If useful, star the repo.**
+**If useful, star the repo. 🌟**
 
 </div>
