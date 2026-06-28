@@ -59,6 +59,7 @@ def main():
             print(f"✅ Signed: {output_apk}")
         except Exception:
             print(f"❌ Failed to sign {input_apk}")
+            sys.exit(1)
 
 if __name__ == "__main__":
     main()

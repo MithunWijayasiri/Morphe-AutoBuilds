@@ -218,11 +218,12 @@ def run_build(app_name: str, source: str, arch: str = "universal") -> str:
             if integrity.returncode != 0:
                 logging.warning(f"APK integrity check failed; attempting repair: {integrity.stdout.strip()}")
                 fixed_apk = Path(f"{app_name}-fixed-v{version}.apk")
-                subprocess.run([
+                fixed_apk.unlink(missing_ok=True)
+                repair = subprocess.run([
                     "zip", "-FF", str(input_apk), "--out", str(fixed_apk)
                 ], check=False, capture_output=True)
 
-                if fixed_apk.exists() and fixed_apk.stat().st_size > 0:
+                if repair.returncode == 0 and fixed_apk.exists() and fixed_apk.stat().st_size > 0:
                     input_apk.unlink(missing_ok=True)
                     fixed_apk.rename(input_apk)
                     logging.info("APK fixed successfully")
@@ -259,7 +260,8 @@ def run_build(app_name: str, source: str, arch: str = "universal") -> str:
                         "java", "-jar", str(cli),
                         "--patches", str(patches),
                         "--input", str(input_apk),
-                        "--output", str(output_apk)
+                        "--output", str(output_apk),
+                        *exclude_patches, *include_patches
                     ]
                     try:
                         utils.run_process(morphe_cmd, capture=True, stream=True)

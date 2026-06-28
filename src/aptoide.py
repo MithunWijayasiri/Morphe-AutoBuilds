@@ -14,7 +14,11 @@ def _safe_get_json(url: str) -> Optional[dict]:
     try:
         res = session.get(url)
         res.raise_for_status()
-        return res.json()
+        data = res.json()
+        if not isinstance(data, dict):
+            logging.debug(f"Aptoide unexpected response type ({url}): {type(data).__name__}")
+            return None
+        return data
     except Exception as e:
         logging.debug(f"Aptoide request failed ({url}): {e}")
         return None

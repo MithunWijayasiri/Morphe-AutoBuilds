@@ -1,8 +1,9 @@
 import logging
+from typing import Optional
 from src import session, utils
 from bs4 import BeautifulSoup
 
-def get_latest_version(app_name: str, config: dict) -> str:
+def get_latest_version(app_name: str, config: dict) -> Optional[str]:
     # Generate all possible Uptodown names
     possible_names = generate_possible_uptodown_names(config)
     
@@ -91,8 +92,11 @@ def get_download_link(version: str, app_name: str, config: dict) -> str:
                 # Use numeric comparison (not lexicographic) so version boundaries
                 # like 9.x -> 10.x are handled correctly.
                 target_norm = utils.normalize_version(version)
-                if all(utils.normalize_version(entry["version"]) < target_norm
-                       for entry in version_data):
+                valid_entries = [e for e in version_data if isinstance(e.get("version"), str)]
+                if valid_entries and all(
+                    utils.normalize_version(e["version"]) < target_norm
+                    for e in valid_entries
+                ):
                     break
                 page += 1
         except Exception as e:

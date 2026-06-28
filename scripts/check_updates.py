@@ -137,14 +137,6 @@ def main():
         print("Updates found! Committing changes...")
         print("="*50)
         
-        # Set GitHub Actions output
-        if 'GITHUB_OUTPUT' in os.environ:
-            with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
-                print('has_updates=true', file=fh)
-        else:
-            # For local testing
-            print("has_updates=true")
-        
         # Commit changes
         try:
             subprocess.run(['git', 'config', '--global', 'user.name', 'GitHub Actions'], check=True)
@@ -159,8 +151,14 @@ def main():
             else:
                 print("Skipping authenticated remote setup; git push may require manual credentials")
             subprocess.run(['git', 'push'], check=True)
-        except Exception as e:
-            print(f"Error committing changes: {e}")
+            # Write has_updates only after push succeeds to avoid false success signals
+            if 'GITHUB_OUTPUT' in os.environ:
+                with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+                    print('has_updates=true', file=fh)
+            else:
+                print("has_updates=true")
+        except Exception:
+            print("Error committing/pushing changes (check credentials and permissions)")
     else:
         print("\n" + "="*50)
         print("No updates found")

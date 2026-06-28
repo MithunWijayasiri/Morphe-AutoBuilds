@@ -2,6 +2,7 @@ import re
 import json
 from sys import exit
 from pathlib import Path
+from github import UnknownObjectException
 from src import repository, gh
 
 def convert_title(text):
@@ -36,7 +37,7 @@ def create_github_release(name, patches_name, cli_name, apk_file_path):
     # Step 1: Check for existing release with the exact tag name
     try:
         existing_release = repo.get_release(tag_name)
-    except Exception:
+    except UnknownObjectException:
         existing_release = None
 
     # Step 2: Delete existing assets if same APK already uploaded

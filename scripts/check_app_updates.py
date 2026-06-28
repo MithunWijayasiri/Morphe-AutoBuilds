@@ -121,7 +121,7 @@ def load_app_config(app_name: str) -> Tuple[Optional[dict], Optional[str]]:
                     data = json.load(f)
                 return data, platform
             except Exception:
-                continue
+                raise
     return None, None
 
 
@@ -373,10 +373,10 @@ def _fetch_bundle_signature(bundle_url: str) -> str:
         data = provider_utils.fetch_json(bundle_url)
     except Exception as e:
         logging.warning(f"  bundle fetch failed for {bundle_url}: {e}")
-        return f"bundle:{bundle_url}@err"
+        return f"bundle:{bundle_url}@err:{type(e).__name__}"
 
     if not isinstance(data, dict):
-        return f"bundle:{bundle_url}@unparseable"
+        return f"bundle:{bundle_url}@badjson:not-a-dict"
 
     tokens: List[str] = []
     for key in ("patches", "integrations"):
@@ -640,6 +640,11 @@ def plan_incremental(full_matrix: List[dict], old_manifest: Optional[dict],
                     # Recovered filename carries its own version; re-derive it
                     # rather than trusting the (possibly stale) stored value.
                     old_built_ver = extract_version_from_filename(recovered)
+        # Backfill for manifest entries that predate the built_version field:
+        # if the APK is still present but built_version was never recorded,
+        # derive it from the filename so the store-version check can fire.
+        if not old_built_ver and carried_apk:
+            old_built_ver = extract_version_from_filename(carried_apk)
 
         new_entries[mkey] = {
             "app_name": app,

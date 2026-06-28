@@ -2,27 +2,26 @@
 import os
 import json
 import glob
-from datetime import datetime
+from datetime import datetime, timezone
 
 def get_app_versions():
     """Read version information from app configs"""
     versions = {}
     
-    # Check apkmirror configs
-    for config_file in glob.glob('apps/apkmirror/*.json'):
-        try:
-            with open(config_file, 'r') as f:
-                config = json.load(f)
+    for platform in ('apkmirror', 'apkpure', 'uptodown'):
+        for config_file in glob.glob(f'apps/{platform}/*.json'):
+            try:
+                with open(config_file, 'r') as f:
+                    config = json.load(f)
                 app_name = os.path.basename(config_file).replace('.json', '')
-                versions[app_name] = {
-                    'version': config.get('version', 'latest'),
-                    'source': 'apkmirror'
-                }
-        except:
-            pass
-    
-    # You can add apkpure and uptodown similarly
-    
+                if app_name not in versions:
+                    versions[app_name] = {
+                        'version': config.get('version', 'latest'),
+                        'source': platform,
+                    }
+            except Exception:
+                pass
+
     return versions
 
 def create_release_notes():
@@ -51,7 +50,7 @@ def create_release_notes():
     
     notes += "---\n\n"
     notes += "## 🔧 Build Information\n\n"
-    notes += f"- **Build Date:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
+    notes += f"- **Build Date:** {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
     notes += "- **Auto-built:** Every 6 hours\n"
     notes += "- **Source:** Various ReVanced sources\n\n"
     notes += "## ⚠️ Disclaimer\n"
