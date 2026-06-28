@@ -6,9 +6,11 @@ APP_NAME, SOURCE, ARCH, APK_PATH set so we can write a tiny per-build JSON that
 the release job will merge into the final manifest.json.
 
 Output file: ./build_records/<app>__<source>__<arch>.json
-Content:    {"key": "app|source|arch", "apk": "<filename>"}
+Content:    {"key": "app|source|arch", "apk": "<filename>",
+             "resolved_version": "<version>", "app_name","source","arch"}
 """
 import os
+import re
 import sys
 import json
 from pathlib import Path
@@ -25,7 +27,7 @@ def detect_arch_from_filename(apk_name: str, default: str = "universal") -> str:
     if not apk_name:
         return default
     base = apk_name.lower()
-    
+
     # Check for specific arch tokens in the filename
     # Order matters: check more specific ones first
     if "arm64-v8a" in base:
@@ -38,8 +40,41 @@ def detect_arch_from_filename(apk_name: str, default: str = "universal") -> str:
         return "x86"
     if "universal" in base:
         return "universal"
-        
+
     return default
+
+
+def extract_version_from_filename(apk_name: str) -> str:
+    """Extract the app version from the APK filename.
+
+    APKs are named ``{app}-{arch}-{name}-v{version}.apk``, e.g.
+    ``instagram-arm64-v8a-piko-v430.0.0.53.80.apk`` -> ``430.0.0.53.80``.
+
+    The version marker is the rightmost ``-v`` immediately followed by a dotted
+    version (``-v<digit>.<digit>...``). We require the dotted shape because
+    architecture tokens also contain ``-v<digit>``: ``arm64-v8a`` and
+    ``armeabi-v7a``. A naive ``-v\\d`` match grabs ``8a-...`` / ``7a-...`` from
+    those arch tokens instead of the real version. Real app versions in this
+    project always contain a dot (e.g. ``430.0.0.53.80``), and build/release
+    suffixes like ``(1575420)``, ``build 002`` or ``-release`` are still captured
+    by the trailing character class after the required ``\\d+.\\d`` prefix.
+
+    This mirrors the identity-prefix logic in cleanup_old_apks.py (which uses the
+    same rightmost ``-v`` marker to split identity from version) so the two
+    scripts always agree on where the version begins.
+
+    Returns '' if no version marker is found.
+    """
+    if not apk_name:
+        return ""
+    stem = apk_name[:-4] if apk_name.lower().endswith(".apk") else apk_name
+    # finditer() scans left-to-right; take the last match so that, if a name
+    # ever contained two dotted "-v" tokens, the trailing version wins. The
+    # dotted-shape requirement is what actually excludes arch tokens.
+    matches = list(re.finditer(r"-v(\d+\.\d[\w.+\-() ]*)$", stem))
+    if not matches:
+        return ""
+    return matches[-1].group(1).strip()
 
 
 def main() -> int:
@@ -57,10 +92,18 @@ def main() -> int:
     # Prefer explicit ARCH env, otherwise detect from filename, fallback universal
     arch = arch_env or detect_arch_from_filename(apk_name) or "universal"
 
+    # Extract the resolved app version from the filename so the manifest can
+    # compare it on the next run and detect when a newer version is available
+    # (or when patches add support for a new version). Without this, the manifest
+    # only ever stored the (often empty) config 'version' field, so apps pinned
+    # to "latest" never triggered a rebuild when a new APK version shipped.
+    resolved_version = extract_version_from_filename(apk_name)
+
     REC_DIR.mkdir(parents=True, exist_ok=True)
     record = {
         "key": f"{app}|{src}|{arch}",
         "apk": apk_name,
+        "resolved_version": resolved_version,
         "app_name": app,
         "source": src,
         "arch": arch,

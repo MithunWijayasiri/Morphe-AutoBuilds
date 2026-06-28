@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+import os
+import json
+import glob
+from datetime import datetime, timezone
+
+def get_app_versions():
+    """Read version information from app configs"""
+    versions = {}
+    
+    for platform in ('apkmirror', 'apkpure', 'uptodown'):
+        for config_file in glob.glob(f'apps/{platform}/*.json'):
+            try:
+                with open(config_file, 'r') as f:
+                    config = json.load(f)
+                app_name = os.path.basename(config_file).replace('.json', '')
+                key = (app_name, platform)
+                if key not in versions:
+                    versions[key] = {
+                        'version': config.get('version', 'latest'),
+                        'source': platform,
+                    }
+            except (OSError, json.JSONDecodeError) as exc:
+                print(f"Warning: skipping {config_file}: {exc}")
+
+    return versions
+
+def create_release_notes():
+    """Create release notes for the release"""
+    versions = get_app_versions()
+    
+    notes = "# ReVanced Patched APKs\n\n"
+    notes += "## 📱 Available Apps\n\n"
+    
+    # Read patch-config to know which apps were built
+    with open('patch-config.json', 'r') as f:
+        patch_config = json.load(f)
+    
+    for app_config in patch_config['patch_list']:
+        app_name = app_config['app_name']
+        source = app_config['source']
+        
+        version_info = versions.get((app_name, source))
+        notes += f"### {app_name.replace('-', ' ').title()} ({source})\n"
+        if version_info:
+            notes += f"- **Version:** `{version_info['version']}`\n"
+            notes += f"- **Source:** {version_info['source']}\n\n"
+        else:
+            notes += "- **Version:** `latest`\n\n"
+    
+    notes += "---\n\n"
+    notes += "## 🔧 Build Information\n\n"
+    notes += f"- **Build Date:** {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
+    notes += "- **Auto-built:** Every 6 hours\n"
+    notes += "- **Source:** Various ReVanced sources\n\n"
+    notes += "## ⚠️ Disclaimer\n"
+    notes += "These APKs are built automatically using the ReVanced patcher.\n"
+    notes += "Use at your own risk.\n"
+    
+    return notes
+
+if __name__ == "__main__":
+    # This writes release notes to a file for the workflow to use
+    release_notes = create_release_notes()
+    
+    with open('release_notes.md', 'w') as f:
+        f.write(release_notes)
+    
+    print("Release notes generated")

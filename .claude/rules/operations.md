@@ -1,3 +1,11 @@
+---
+paths:
+  - ".github/workflows/*.yml"
+  - "scripts/**/*.py"
+  - "patch-config.json"
+  - "arch-config.json"
+---
+
 # Operations runbook
 
 How-tos and pipeline/release detail. Field formats live in `config-reference.md`.
@@ -10,6 +18,18 @@ How-tos and pipeline/release detail. Field formats live in `config-reference.md`
 4. Optionally add an `arch-config.json` override (default is `universal` only).
 
 `source` must already exist as `sources/<source>.json` with exact casing.
+
+## Remove an app
+
+1. Remove the `{ "app_name": "<app>", "source": "..." }` entry from `patch-config.json`.
+2. Check `arch-config.json` — remove the entry for `(app, source)` if one exists.
+3. Delete orphaned app config files (whichever exist):
+   - `apps/apkmirror/<app>.json`
+   - `apps/apkpure/<app>.json`
+   - `apps/uptodown/<app>.json`
+   - `apps/aptoide/<app>.json`
+4. Delete `patches/<app>-<source>.txt` if it exists.
+5. **Never delete `sources/<source>.json`** — sources are shared across many apps.
 
 ## Fix a failing build
 
@@ -50,4 +70,4 @@ Live scripts: `check_app_updates.py`, `record_build.py`, `merge_manifest.py`, `v
 - `manifest.json` (release asset) is the incremental state of record — `(app, source, arch)` → `{config_version, source_sig, apk}`.
 - Rebuild triggers per entry: app `version` changed, source signature changed, APK missing from the release, or no APK recorded.
 - Build matrix is deduped to `(app, source)` — if any arch of a pair needs a rebuild, the whole pair rebuilds (one `python -m src` run emits all its arches) and its stale carry-overs are dropped.
-- Total payload is large (~8 GB / 100+ APKs) — watch GitHub storage limits.
+- Total payload is large (several GB across all APKs) — watch GitHub storage limits.

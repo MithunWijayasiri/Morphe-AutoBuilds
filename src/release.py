@@ -2,6 +2,7 @@ import re
 import json
 from sys import exit
 from pathlib import Path
+from github import UnknownObjectException
 from src import repository, gh
 
 def convert_title(text):
@@ -36,7 +37,7 @@ def create_github_release(name, patches_name, cli_name, apk_file_path):
     # Step 1: Check for existing release with the exact tag name
     try:
         existing_release = repo.get_release(tag_name)
-    except:
+    except UnknownObjectException:
         existing_release = None
 
     # Step 2: Delete existing assets if same APK already uploaded
@@ -61,7 +62,13 @@ def create_github_release(name, patches_name, cli_name, apk_file_path):
             if old_suffix == current_suffix:
                 old_numeric = re.sub(r'(-[a-z]+\.\d+)?(-release\d*)?$', '', old_version)
                 current_numeric = re.sub(r'(-[a-z]+\.\d+)?(-release\d*)?$', '', patchver)
-                if old_numeric < current_numeric:
+                # Compare dotted versions numerically (not lexicographically) so
+                # "9.0" vs "10.0" is ordered correctly.
+                old_tuple = tuple(int(p) if p.isdigit() else 0
+                                  for p in old_numeric.split('.'))
+                current_tuple = tuple(int(p) if p.isdigit() else 0
+                                      for p in current_numeric.split('.'))
+                if old_tuple < current_tuple:
                     release.delete_release()
 
     # Step 4: Create new release if it doesn't exist

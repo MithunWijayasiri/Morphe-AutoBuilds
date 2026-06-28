@@ -6,7 +6,9 @@ from pathlib import Path
 from os import getenv
 import subprocess
 from src import (
+    r2,
     utils,
+    release,
     downloader
 )
 
@@ -19,7 +21,6 @@ def _should_retry_with_older_version(output: str | None) -> bool:
     return (
         "failed to match the fingerprint" in t
         or "patch.patchexception" in t
-        or "patchexception" in t
         or ("fingerprint" in t and "failed" in t)
         or "patching aborted" in t
     )
@@ -174,9 +175,11 @@ def run_build(app_name: str, source: str, arch: str = "universal") -> str:
                 logging.error("Merged APK file not found")
                 raise RuntimeError("Merged APK file not found")
 
-            # Clean up filename: remove build number like (1575420) and -1575420
+            # Clean up filename: remove build number like (1575420) and -1575420.
+            # Only strip 6+ digit build-number tokens so legitimate short version
+            # segments (e.g. "app-2_0") are not mangled.
             clean_name = re.sub(r'\(\d+\)', '', merged_apk.name)  # Remove (1575420)
-            clean_name = re.sub(r'-\d+_', '_', clean_name)  # Remove -1575420_ -> _
+            clean_name = re.sub(r'-\d{6,}_', '_', clean_name)  # Remove -1575420_ -> _
             if clean_name != merged_apk.name:
                 clean_apk = merged_apk.with_name(clean_name)
                 merged_apk.rename(clean_apk)
@@ -204,20 +207,32 @@ def run_build(app_name: str, source: str, arch: str = "universal") -> str:
                 "lib/x86/*", "lib/x86_64/*"
             ], silent=True, check=False)
 
-        # FIX: Repair corrupted APK from Uptodown
-        logging.info("Checking APK for corruption...")
+        # FIX: Repair corrupted APK (e.g. from Uptodown) ONLY when integrity check fails.
+        # Previously this ran on every build and could silently alter healthy APKs.
+        logging.info("Checking APK integrity...")
         try:
-            fixed_apk = Path(f"{app_name}-fixed-v{version}.apk")
-            subprocess.run([
-                "zip", "-FF", str(input_apk), "--out", str(fixed_apk)
-            ], check=False, capture_output=True)
+            integrity = subprocess.run(
+                ["zip", "-T", str(input_apk)],
+                check=False, capture_output=True, text=True,
+            )
+            if integrity.returncode != 0:
+                logging.warning(f"APK integrity check failed; attempting repair: {integrity.stdout.strip()}")
+                fixed_apk = Path(f"{app_name}-fixed-v{version}.apk")
+                fixed_apk.unlink(missing_ok=True)
+                repair = subprocess.run([
+                    "zip", "-FF", str(input_apk), "--out", str(fixed_apk)
+                ], check=False, capture_output=True)
 
-            if fixed_apk.exists() and fixed_apk.stat().st_size > 0:
-                input_apk.unlink(missing_ok=True)
-                fixed_apk.rename(input_apk)
-                logging.info("APK fixed successfully")
+                if repair.returncode == 0 and fixed_apk.exists() and fixed_apk.stat().st_size > 0:
+                    input_apk.unlink(missing_ok=True)
+                    fixed_apk.rename(input_apk)
+                    logging.info("APK fixed successfully")
+                else:
+                    logging.warning("Repair produced no usable file; keeping original APK")
+            else:
+                logging.info("APK integrity OK; no repair needed")
         except Exception as e:
-            logging.warning(f"Could not fix APK: {e}")
+            logging.warning(f"Could not check/fix APK: {e}")
 
         # Include architecture in output filename
         output_apk = Path(f"{app_name}-{arch}-patch-v{version}.apk")
@@ -226,25 +241,35 @@ def run_build(app_name: str, source: str, arch: str = "universal") -> str:
             # USE DIFFERENT COMMANDS BASED ON SOURCE TYPE
             if is_morphe:
                 logging.info("🔧 Using Morphe patching system...")
+                patch_error: subprocess.CalledProcessError | None = None
                 try:
                     morphe_cmd = [
                         "java", "-jar", str(cli),
-                        "patch", "--continue-on-error",
-                        "--patches", str(patches),
+                        "patch", "--patches", str(patches),
                         "--out", str(output_apk), str(input_apk),
                         *exclude_patches, *include_patches
                     ]
                     utils.run_process(morphe_cmd, capture=True, stream=True)
                 except subprocess.CalledProcessError as e:
+                    # Remember the original failure so the retry logic below can
+                    # decide whether to fall back to an older version. We still
+                    # try the alternative argument format as a best-effort.
+                    patch_error = e
                     logging.info("Trying alternative Morphe command format...")
                     morphe_cmd = [
                         "java", "-jar", str(cli),
-                        "patch", "--continue-on-error",
-                        "-p", str(patches),
-                        "--out", str(output_apk), str(input_apk),
+                        "--patches", str(patches),
+                        "--input", str(input_apk),
+                        "--output", str(output_apk),
                         *exclude_patches, *include_patches
                     ]
-                    utils.run_process(morphe_cmd, capture=True, stream=True)
+                    try:
+                        utils.run_process(morphe_cmd, capture=True, stream=True)
+                    except subprocess.CalledProcessError:
+                        raise e
+                if patch_error is not None:
+                    # Fallback path succeeded; clear the error so we don't retry.
+                    patch_error = None
             else:
                 logging.info("🔧 Using ReVanced patching system...")
                 cli_name = Path(cli).name.lower()

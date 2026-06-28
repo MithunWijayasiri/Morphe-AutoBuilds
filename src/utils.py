@@ -4,6 +4,7 @@ import re
 import time
 import logging
 from typing import List, Optional
+from github.GithubException import BadCredentialsException
 from src import gh
 from sys import exit
 import subprocess
@@ -287,6 +288,11 @@ def get_supported_versions(package_name: str, cli: str, patches: str) -> list[st
     return versions
 
 
+def get_supported_version(package_name: str, cli: str, patches: str) -> Optional[str]:
+    """Backwards compatible helper: returns the highest compatible version, if any."""
+    versions = get_supported_versions(package_name, cli, patches)
+    return versions[0] if versions else None
+
 def extract_filename(response, fallback_url=None) -> str:
     cd = response.headers.get('content-disposition')
     if cd:
@@ -415,6 +421,8 @@ def detect_gitlab_release(project: str, tag: str) -> dict:
     else:
         data = fetch_json(f"https://gitlab.com/api/v4/projects/{encoded}/releases/{quote(tag, safe='')}")
 
+    if not isinstance(data, dict):
+        raise ValueError(f"Unexpected GitLab release response shape for {project}/{tag}")
     assets = (data.get("assets") or {}).get("links") or []
     return normalize_release(data.get("tag_name"), data.get("released_at"), assets)
 
@@ -431,6 +439,8 @@ def detect_codeberg_release(user: str, repo: str, tag: str) -> dict:
     else:
         data = fetch_json(f"{base}/tags/{quote(tag, safe='')}")
 
+    if not isinstance(data, dict):
+        raise ValueError(f"Unexpected Codeberg release response shape for {user}/{repo}/{tag}")
     return normalize_release(data.get("tag_name"), data.get("published_at"), data.get("assets") or [])
 
 def detect_github_release(user: str, repo: str, tag: str) -> dict:
@@ -513,4 +523,10 @@ def detect_github_release(user: str, repo: str, tag: str) -> dict:
             logging.error(f"Error fetching release {tag} for {user}/{repo} after {max_retries} attempts: {e}")
             raise
 
-
+def detect_source_type(cli_file: Path, patches_file: Path) -> str:
+    """Detect if we're using Morphe or ReVanced based on downloaded files"""
+    if cli_file and "morphe" in cli_file.name.lower() and patches_file and patches_file.suffix == ".mpp":
+        return "morphe"
+    elif cli_file and "revanced" in cli_file.name.lower() and patches_file and patches_file.suffix in [".jar", ".rvp"]:
+        return "revanced"
+    return "unknown"

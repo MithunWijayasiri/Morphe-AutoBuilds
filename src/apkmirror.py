@@ -293,20 +293,32 @@ def get_download_link(version: str, app_name: str, config: dict, arch: str = Non
         # URL-encode the release_name to handle unicode characters like ․
         encoded_release_name = quote(release_name, safe='')
         encoded_name = quote(config['name'], safe='')
+        org = config.get('org', '')
+        encoded_org = quote(org, safe='')
         
         # Priority 1: With release_name and -release suffix (most specific)
-        url_patterns.append(f"{base_url}/apk/{config['org']}/{encoded_name}/{encoded_release_name}-{current_ver_str}-release/")
+        url_patterns.append(f"{base_url}/apk/{org}/{encoded_name}/{encoded_release_name}-{current_ver_str}-release/")
         
         # Priority 2: With app name and -release suffix
         if release_name != config['name']:
-            url_patterns.append(f"{base_url}/apk/{config['org']}/{encoded_name}/{encoded_name}-{current_ver_str}-release/")
+            url_patterns.append(f"{base_url}/apk/{org}/{encoded_name}/{encoded_name}-{current_ver_str}-release/")
         
-        # Priority 3: With release_name without -release
-        url_patterns.append(f"{base_url}/apk/{config['org']}/{encoded_name}/{encoded_release_name}-{current_ver_str}/")
+        # Priority 3: With org name only + -release suffix
+        # APKMirror often uses {org}-{version}-release for apps where name={org}-{org}
+        # e.g., name="instagram-instagram" but release slug is "instagram-430-..."
+        if org and org != release_name and org != config['name']:
+            url_patterns.append(f"{base_url}/apk/{org}/{encoded_name}/{encoded_org}-{current_ver_str}-release/")
         
-        # Priority 4: With app name without -release
+        # Priority 4: With release_name without -release
+        url_patterns.append(f"{base_url}/apk/{org}/{encoded_name}/{encoded_release_name}-{current_ver_str}/")
+        
+        # Priority 5: With app name without -release
         if release_name != config['name']:
-            url_patterns.append(f"{base_url}/apk/{config['org']}/{encoded_name}/{encoded_name}-{current_ver_str}/")
+            url_patterns.append(f"{base_url}/apk/{org}/{encoded_name}/{encoded_name}-{current_ver_str}/")
+        
+        # Priority 6: With org name only, without -release
+        if org and org != release_name and org != config['name']:
+            url_patterns.append(f"{base_url}/apk/{org}/{encoded_name}/{encoded_org}-{current_ver_str}/")
         
         # Remove duplicate patterns
         url_patterns = list(dict.fromkeys(url_patterns))
@@ -470,28 +482,6 @@ def get_download_link(version: str, app_name: str, config: dict, arch: str = Non
                 return base_url + button['href']
     except Exception as e:
         logging.error(f"Error in download flow: {e}")
-    
-    return None
-
-    # --- STANDARD DOWNLOAD FLOW (Page 2 -> Page 3 -> Link) ---
-    response = session.get(download_page_url)
-    response.raise_for_status()
-    content_size = len(response.content)
-    logging.info(f"URL:{response.url} [{content_size}/{content_size}] -> Variant Page")
-    soup = BeautifulSoup(response.content, "html.parser")
-
-    sub_url = soup.find('a', class_='downloadButton')
-    if sub_url:
-        final_download_page_url = base_url + sub_url['href']
-        response = session.get(final_download_page_url)
-        response.raise_for_status()
-        content_size = len(response.content)
-        logging.info(f"URL:{response.url} [{content_size}/{content_size}] -> Download Page")
-        soup = BeautifulSoup(response.content, "html.parser")
-
-        button = soup.find('a', id='download-link')
-        if button:
-            return base_url + button['href']
 
     return None
 
@@ -534,7 +524,10 @@ def get_latest_version(app_name: str, config: dict) -> str:
     version_pattern = re.compile(r'\d+(\.\d+)*(-[a-zA-Z0-9]+(\.\d+)*)*')
 
     for row in app_rows:
-        version_text = row.find("h5", class_="appRowTitle").a.text.strip()
+        title_h5 = row.find("h5", class_="appRowTitle")
+        if not title_h5 or not title_h5.a:
+            continue
+        version_text = title_h5.a.get_text(strip=True) or ""
         if "alpha" not in version_text.lower() and "beta" not in version_text.lower():
             match = version_pattern.search(version_text)
             if match:
