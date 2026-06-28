@@ -1,3 +1,12 @@
+---
+paths:
+  - "patch-config.json"
+  - "arch-config.json"
+  - "apps/**/*.json"
+  - "sources/**/*.json"
+  - "patches/**/*.txt"
+---
+
 # Config reference
 
 Exact field formats for every config file. Read when editing config; not needed for general code work.
