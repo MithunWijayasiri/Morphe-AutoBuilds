@@ -40,7 +40,7 @@ Patched APKs for 60+ Android apps — built daily, no root required.
 | Remove watermark | CamScanner, XRecorder, VN Video Editor |
 | Unlock features | Telegram |
 | Unlock pro / VIP | Niagara Launcher, Letterboxd, Trakt |
-| Unlock premium | Pandora, Pixiv, Photomath, Bussu, Mimo, Lingory, Eggbun, Teuida, TTMIK Stories, Pydroid, Webster, MacroFactor, MacroFactor Workout, Hevy, Strava, MyFitnessPal, SnorelLab, Lyfta, TickTick, MacroDroid, Xodo, RAR, Solid Explorer, Smart Launcher, ibisPaint, Prompter, Alarmo, Lumina, Mirinae, Document Scanner, Splitwise, My Expenses, Chargeprice, Windy, Ventusky, Komoot, Mapy, Geocaching, Fotmob, Crex, ProtonMail, ProtonVPN, Fing, Eyecon, Flatastic, Wallcraft, Avocards, Podcast |
+| Unlock premium | Pandora, Pixiv, Photomath, Busuu, Mimo, Lingory, Eggbun, Teuida, TTMIK Stories, Pydroid, Webster, MacroFactor, MacroFactor Workout, Hevy, Strava, MyFitnessPal, SnorelLab, Lyfta, TickTick, MacroDroid, Xodo, RAR, Solid Explorer, Smart Launcher, ibisPaint, Prompter, Alarmo, Lumina, Mirinae, Document Scanner, Splitwise, My Expenses, Chargeprice, Windy, Ventusky, Komoot, Mapy, Geocaching, Fotmob, Crex, ProtonMail, ProtonVPN, Fing, Eyecon, Flatastic, Wallcraft, Avocards, Podcast |
 | Enhanced dialer | Phone / Dialer |
 
 ## Disclaimer
