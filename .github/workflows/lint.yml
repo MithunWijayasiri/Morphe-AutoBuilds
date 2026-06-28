@@ -6,11 +6,16 @@ on:
       - "**.json"
       - "patches/*.txt"
 
+permissions:
+  contents: read
+
 jobs:
   validate-json:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Validate JSON files
         run: |
@@ -29,6 +34,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Validate patch files
         run: |
@@ -36,7 +43,7 @@ jobs:
           for f in patches/*.txt; do
             [ -f "$f" ] || continue
             line_num=0
-            while IFS= read -r line; do
+            while IFS= read -r line || [[ -n "$line" ]]; do
               line_num=$((line_num + 1))
               # Skip empty lines and comments
               [[ -z "$line" || "$line" == \#* ]] && continue
