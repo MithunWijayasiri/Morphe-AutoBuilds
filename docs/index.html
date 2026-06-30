@@ -6,21 +6,25 @@
 <title>Morphe AutoBuilds Lite — Patched APKs, rolling.</title>
 <meta name="description" content="Patched APKs for 50+ Android apps — ad-free, premium unlocked, no root required. Rolling release, multi-architecture, consistently signed.">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=JetBrains+Mono:wght@400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=JetBrains+Mono:wght@400;500&display=swap');
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #0a0a0a;
-    --surface: #111111;
-    --border: #1e1e1e;
-    --text: #f5f5f5;
-    --text-muted: #777777;
-    --accent: #2ea44f;
-    --accent-dim: #1b5e2b;
-    --accent-glow: rgba(46, 164, 79, 0.15);
-    --radius: 6px;
-    --max-w: 960px;
+    --bg: #0b0b0c;
+    --surface: #131315;
+    --border: #232327;
+    --text: #f4f3f1;
+    --text-soft: #b6b4af;
+    --text-muted: #74726d;
+    --accent: #34c45c;
+    --accent-dim: #1e5e34;
+    --accent-glow: rgba(52, 196, 92, 0.14);
+    --radius: 8px;
+    --max-w: 1080px;
+    --serif: 'Fraunces', Georgia, serif;
+    --sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
     --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   }
@@ -28,24 +32,27 @@
   html { scroll-behavior: smooth; }
 
   body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: var(--sans);
     background: var(--bg);
     color: var(--text);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
     overflow-x: hidden;
   }
+
+  ::selection { background: var(--accent); color: #07140b; }
 
   /* ── BACKGROUND ORB ─────────────────────────── */
 
   .bg-orb {
-    position: fixed; top: -30%; left: 50%;
-    width: 800px; height: 800px;
+    position: fixed; top: -32%; left: 50%;
+    width: 820px; height: 820px;
     border-radius: 50%;
-    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 68%);
     transform: translate(-50%, 0);
     pointer-events: none; z-index: 0;
-    animation: orbFloat 12s ease-in-out infinite;
+    animation: orbFloat 13s ease-in-out infinite;
   }
   @keyframes orbFloat {
     0%, 100% { transform: translate(-50%, 0) scale(1); opacity: 0.4; }
@@ -54,150 +61,202 @@
 
   /* ── TYPOGRAPHY ─────────────────────────────── */
 
-  h1, h2, h3 { font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; }
-  h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); }
-  h2 { font-size: clamp(1.75rem, 3.5vw, 2.5rem); }
-  h3 { font-size: 1.125rem; font-weight: 600; letter-spacing: -0.01em; }
+  .display {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-optical-sizing: auto;
+    letter-spacing: -0.025em;
+    line-height: 1.02;
+  }
+  h1, h2, h3 { font-weight: 600; letter-spacing: -0.02em; line-height: 1.12; }
+  h1 { font-size: clamp(3rem, 9vw, 6.5rem); }
+  h2 { font-size: clamp(2rem, 5vw, 3.5rem); }
+  h3 { font-size: 1.1875rem; font-weight: 600; letter-spacing: -0.01em; }
 
-  .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.8125rem; }
+  em { font-style: italic; }
+
+  .mono { font-family: var(--mono); font-size: 0.8125rem; }
+
+  .overline {
+    font-family: var(--mono);
+    font-size: 0.6875rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.22em;
+    color: var(--accent);
+  }
 
   .text-muted { color: var(--text-muted); }
+  .text-soft { color: var(--text-soft); }
   .text-accent { color: var(--accent); }
 
   /* ── LAYOUT ─────────────────────────────────── */
 
-  .container { max-width: var(--max-w); margin: 0 auto; padding: 0 1.5rem; position: relative; z-index: 1; }
+  .container { max-width: var(--max-w); margin: 0 auto; padding: 0 1.75rem; position: relative; z-index: 1; }
 
-  section { padding: 6rem 0; position: relative; }
+  section { padding: 7rem 0; position: relative; }
   section + section { border-top: 1px solid var(--border); }
 
   /* ── SCROLL REVEAL ──────────────────────────── */
 
   .reveal {
     opacity: 0;
-    transform: translateY(28px);
-    transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+    transform: translateY(30px);
+    transition: opacity 0.8s var(--ease-out), transform 0.8s var(--ease-out);
   }
-  .reveal.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
 
   /* ── NAV ────────────────────────────────────── */
 
   nav {
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    background: rgba(10,10,10,0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(11,11,12,0.7);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     border-bottom: 1px solid transparent;
     transition: border-color 0.3s, background 0.3s;
   }
   nav.scrolled {
     border-bottom-color: var(--border);
-    background: rgba(10,10,10,0.95);
+    background: rgba(11,11,12,0.92);
   }
   nav .container {
     display: flex; align-items: center; justify-content: space-between;
-    height: 3.5rem;
+    height: 3.75rem;
   }
-  .nav-logo { font-weight: 700; font-size: 1.125rem; letter-spacing: -0.01em; }
-  .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+  .nav-logo {
+    font-family: var(--serif); font-weight: 500; font-size: 1.25rem;
+    letter-spacing: -0.02em;
+  }
+  .nav-logo b { font-weight: 600; }
+  .nav-logo .lite {
+    font-family: var(--mono); font-size: 0.625rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.16em;
+    color: var(--accent); vertical-align: middle;
+    border: 1px solid var(--accent-dim); border-radius: 100px;
+    padding: 0.15rem 0.45rem; margin-left: 0.5rem;
+  }
+  .nav-links { display: flex; align-items: center; gap: 0.35rem; list-style: none; counter-reset: navitem; }
   .nav-links a {
-    color: var(--text-muted); text-decoration: none; font-size: 0.875rem;
-    font-weight: 500; transition: color 0.2s;
-    position: relative;
+    display: inline-flex; align-items: baseline; gap: 0.4rem;
+    color: var(--text-soft); text-decoration: none;
+    font-family: var(--mono); font-size: 0.75rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    padding: 0.45rem 0.8rem; border-radius: 100px;
+    transition: color 0.2s, background 0.2s;
   }
-  .nav-links a::after {
-    content: ''; position: absolute; bottom: -4px; left: 0; right: 0;
-    height: 1.5px; background: var(--accent);
-    transform: scaleX(0); transition: transform 0.2s var(--ease-out);
+  .nav-page { counter-increment: navitem; }
+  .nav-page a::before {
+    content: counter(navitem, decimal-leading-zero);
+    color: var(--accent); font-size: 0.625rem; letter-spacing: 0;
+    opacity: 0.6; transition: opacity 0.2s;
   }
-  .nav-links a:hover { color: var(--text); }
-  .nav-links a:hover::after { transform: scaleX(1); }
+  .nav-links a:hover { color: var(--text); background: var(--surface); }
+  .nav-page a:hover::before { opacity: 1; }
+  .nav-cta {
+    color: var(--text) !important;
+    border: 1px solid var(--border);
+    margin-left: 0.5rem; transition: border-color 0.2s, color 0.2s, background 0.2s;
+  }
+  .nav-cta:hover { border-color: var(--accent-dim); background: transparent; }
 
   /* ── HERO ───────────────────────────────────── */
 
-  .hero { padding: 10rem 0 6rem; text-align: center; position: relative; z-index: 1; }
-  .hero h1 { margin-bottom: 1.25rem; }
+  .hero { padding: 11rem 0 7rem; position: relative; z-index: 1; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-family: var(--mono); font-size: 0.75rem; color: var(--text-soft);
+    border: 1px solid var(--border); border-radius: 100px;
+    padding: 0.35rem 0.85rem; margin-bottom: 2rem;
+  }
+  .hero-badge .dot {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+    box-shadow: 0 0 0 0 var(--accent);
+    animation: pulse 2.4s var(--ease-out) infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(52,196,92,0.5); }
+    70% { box-shadow: 0 0 0 8px rgba(52,196,92,0); }
+    100% { box-shadow: 0 0 0 0 rgba(52,196,92,0); }
+  }
+  .hero h1 { margin-bottom: 1.75rem; max-width: 14ch; }
+  .hero h1 .line2 { color: var(--text-soft); }
+  .hero h1 em { color: var(--accent); font-style: italic; }
   .hero .subtitle {
-    font-size: 1.25rem; color: var(--text-muted); max-width: 540px;
-    margin: 0 auto 2.5rem; font-weight: 400;
+    font-size: clamp(1.0625rem, 1.6vw, 1.3125rem);
+    color: var(--text-soft); max-width: 46ch;
+    margin-bottom: 2.75rem; font-weight: 400; line-height: 1.55;
   }
-  .hero .stats {
-    display: flex; justify-content: center; gap: 2.5rem; margin-bottom: 2.5rem;
-    flex-wrap: wrap;
-  }
-  .hero .stat { text-align: center; }
-  .hero .stat-number {
-    font-size: 2.25rem; font-weight: 800; letter-spacing: -0.03em;
-    color: var(--accent); line-height: 1;
-    font-variant-numeric: tabular-nums;
-  }
-  .hero .stat-label { font-size: 0.8125rem; color: var(--text-muted); margin-top: 0.375rem; }
+  .hero .btn-group { justify-content: flex-start; margin-bottom: 4.5rem; }
 
-  /* stat entrance pop */
+  .hero .stats {
+    display: flex; gap: 0; flex-wrap: wrap;
+    border-top: 1px solid var(--border);
+    max-width: 620px;
+  }
   .hero .stat {
+    flex: 1; min-width: 120px; padding: 1.5rem 1.5rem 0 0;
     opacity: 0; transform: translateY(16px);
     animation: statPopIn 0.6s var(--ease-spring) forwards;
   }
-  .hero .stat:nth-child(1) { animation-delay: 0.1s; }
-  .hero .stat:nth-child(2) { animation-delay: 0.25s; }
-  .hero .stat:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes statPopIn {
-    to { opacity: 1; transform: translateY(0); }
+  .hero .stat:nth-child(1) { animation-delay: 0.15s; }
+  .hero .stat:nth-child(2) { animation-delay: 0.28s; }
+  .hero .stat:nth-child(3) { animation-delay: 0.41s; }
+  @keyframes statPopIn { to { opacity: 1; transform: translateY(0); } }
+  .hero .stat-number {
+    font-family: var(--serif); font-weight: 500;
+    font-size: clamp(2.5rem, 5vw, 3.5rem); letter-spacing: -0.03em;
+    color: var(--text); line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .hero .stat-number .suffix { color: var(--accent); }
+  .hero .stat-label {
+    font-family: var(--mono); font-size: 0.6875rem; text-transform: uppercase;
+    letter-spacing: 0.14em; color: var(--text-muted); margin-top: 0.65rem;
   }
 
   /* ── BUTTONS ────────────────────────────────── */
 
   .btn {
     display: inline-flex; align-items: center; gap: 0.5rem;
-    padding: 0.75rem 1.5rem; border-radius: var(--radius);
-    font-family: inherit; font-size: 0.9375rem; font-weight: 600;
+    padding: 0.8rem 1.6rem; border-radius: 100px;
+    font-family: var(--sans); font-size: 0.9375rem; font-weight: 600;
     text-decoration: none; cursor: pointer;
     transition: all 0.25s var(--ease-out);
     border: 1px solid transparent;
-    position: relative; overflow: hidden;
   }
   .btn-primary {
-    background: var(--accent); color: #fff;
-    box-shadow: 0 0 0 0 var(--accent-glow);
+    background: var(--accent); color: #07140b;
   }
   .btn-primary:hover {
-    background: #3bb85a;
+    background: #45d96d;
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px var(--accent-glow);
+    box-shadow: 0 10px 30px var(--accent-glow);
   }
   .btn-primary:active { transform: translateY(0); }
   .btn-secondary {
     background: transparent; color: var(--text); border-color: var(--border);
   }
   .btn-secondary:hover {
-    background: var(--surface); border-color: #333;
+    background: var(--surface); border-color: #3a3a40;
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
   }
   .btn-secondary:active { transform: translateY(0); }
-  .btn-group { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+  .btn-group { display: flex; gap: 0.75rem; flex-wrap: wrap; }
 
   /* ── SECTION HEADERS ────────────────────────── */
 
-  .section-label {
-    display: inline-block; font-size: 0.75rem; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent);
-    margin-bottom: 0.75rem;
-  }
-  .section-header { margin-bottom: 3rem; }
-  .section-header h2 { margin-bottom: 0.75rem; }
-  .section-header p { color: var(--text-muted); font-size: 1.0625rem; max-width: 560px; }
+  .section-header { margin-bottom: 3.5rem; max-width: 640px; }
+  .section-header .overline { display: block; margin-bottom: 1.25rem; }
+  .section-header h2 { margin-bottom: 1.25rem; }
+  .section-header h2 em { color: var(--accent); }
+  .section-header p { color: var(--text-soft); font-size: 1.125rem; max-width: 52ch; }
 
   /* ── FEATURES ───────────────────────────────── */
 
-  .features-list { display: flex; flex-direction: column; gap: 0; }
+  .features-list { display: flex; flex-direction: column; }
   .feature-row {
     display: grid; grid-template-columns: 1fr 1fr;
-    align-items: center; gap: 3rem;
-    padding: 2.5rem 0;
+    align-items: center; gap: 3.5rem;
+    padding: 3rem 0;
     border-bottom: 1px solid var(--border);
     transition: border-color 0.3s;
   }
@@ -206,14 +265,18 @@
   .feature-row:last-child { border-bottom: none; padding-bottom: 0; }
   .feature-row.reverse { direction: rtl; }
   .feature-row.reverse .feature-content { direction: ltr; }
-  .feature-content h3 { font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem; letter-spacing: -0.01em; }
-  .feature-content p { color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6; }
+  .feature-num {
+    font-family: var(--serif); font-size: 0.875rem; color: var(--accent);
+    display: block; margin-bottom: 0.75rem; font-variant-numeric: tabular-nums;
+  }
+  .feature-content h3 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.75rem; letter-spacing: -0.015em; }
+  .feature-content p { color: var(--text-soft); font-size: 1rem; line-height: 1.65; }
   .feature-visual {
     direction: ltr;
     background: var(--surface); border: 1px solid var(--border);
     border-radius: var(--radius); padding: 2rem;
     display: flex; align-items: center; justify-content: center;
-    min-height: 140px;
+    min-height: 160px;
     transition: border-color 0.3s, box-shadow 0.3s;
   }
   .feature-visual:hover {
@@ -221,128 +284,137 @@
     box-shadow: 0 0 0 1px var(--accent-glow);
   }
   .feature-code {
-    font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
-    color: var(--accent); text-align: left; line-height: 1.7;
+    font-family: var(--mono); font-size: 0.75rem;
+    color: var(--text-soft); text-align: left; line-height: 1.85;
   }
   .feature-code .dim { color: var(--text-muted); }
+  .feature-code .ok { color: var(--accent); }
   .feature-tags {
     display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;
   }
   .feature-tags span {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 0.4rem 0.75rem;
-    font-size: 0.8125rem; font-family: 'JetBrains Mono', monospace; color: var(--text-muted);
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 100px; padding: 0.45rem 0.95rem;
+    font-size: 0.8125rem; font-family: var(--mono); color: var(--text-soft);
     transition: border-color 0.3s, color 0.3s;
   }
   .feature-tags span:hover { border-color: var(--accent-dim); color: var(--text); }
-  .feature-icons {
-    display: flex; gap: 1rem; font-size: 2rem;
+
+  /* ── NOTE BANNER ────────────────────────────── */
+
+  .note-banner {
+    display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 2px solid var(--accent);
+    border-radius: var(--radius); padding: 1.1rem 1.35rem;
+    margin-top: 2.5rem; font-size: 0.9375rem; color: var(--text-soft);
+    transition: border-color 0.3s;
   }
+  .note-banner strong { color: var(--text); font-weight: 600; }
+  .note-banner a { color: var(--accent); font-weight: 500; text-decoration: none; }
+  .note-banner a:hover { text-decoration: underline; }
 
   /* ── APPS GRID ──────────────────────────────── */
 
-  .apps-category { margin-bottom: 2.5rem; }
+  .apps-category { margin-bottom: 3rem; }
+  .apps-category:last-child { margin-bottom: 0; }
   .apps-category h3 {
-    font-size: 0.8125rem; font-weight: 600; text-transform: uppercase;
-    letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 0.75rem;
+    font-family: var(--mono); font-size: 0.75rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--text-muted); margin-bottom: 1rem;
+    display: flex; align-items: baseline; gap: 0.75rem;
   }
+  .apps-category h3 .count { color: var(--accent); }
   .apps-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 0.5rem;
   }
   .app-tag {
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 0.5rem 0.75rem;
-    font-size: 0.8125rem; font-weight: 500; color: var(--text);
-    text-align: center;
-    transition: transform 0.25s var(--ease-out), border-color 0.25s, box-shadow 0.25s;
+    border-radius: var(--radius); padding: 0.6rem 0.85rem;
+    font-size: 0.875rem; font-weight: 500; color: var(--text-soft);
+    transition: transform 0.25s var(--ease-out), border-color 0.25s, color 0.25s, box-shadow 0.25s;
     cursor: default;
   }
   .app-tag:hover {
-    border-color: var(--accent-dim);
-    transform: translateY(-2px) scale(1.03);
-    box-shadow: 0 4px 16px rgba(46,164,79,0.1);
-    z-index: 1;
-    position: relative;
+    border-color: var(--accent-dim); color: var(--text);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(52,196,92,0.1);
+    z-index: 1; position: relative;
   }
 
   /* ── STEPS ──────────────────────────────────── */
 
-  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; counter-reset: step; }
-  .step { position: relative; padding-top: 2.5rem; }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 2.5rem; counter-reset: step; }
+  .step { position: relative; padding-top: 3.25rem; }
   .step::before {
-    counter-increment: step; content: counter(step);
+    counter-increment: step; content: counter(step, decimal-leading-zero);
     position: absolute; top: 0; left: 0;
-    width: 1.75rem; height: 1.75rem;
-    background: var(--accent); color: #fff;
-    border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    font-size: 0.8125rem; font-weight: 700;
-    transition: transform 0.3s var(--ease-spring), box-shadow 0.3s;
+    font-family: var(--serif); font-size: 1.75rem; font-weight: 500;
+    color: var(--accent); line-height: 1;
+    transition: transform 0.3s var(--ease-spring);
   }
-  .step:hover::before {
-    transform: scale(1.2);
-    box-shadow: 0 0 16px var(--accent-glow);
+  .step::after {
+    content: ''; position: absolute; top: 0.55rem; left: 3rem; right: 0;
+    height: 1px; background: var(--border);
   }
-  .step h3 { margin-bottom: 0.375rem; }
-  .step p { color: var(--text-muted); font-size: 0.9375rem; }
+  .step:last-child::after { display: none; }
+  .step:hover::before { transform: translateY(-3px); }
+  .step h3 { margin-bottom: 0.5rem; font-size: 1.125rem; }
+  .step p { color: var(--text-soft); font-size: 0.9375rem; }
 
   /* ── CTA ────────────────────────────────────── */
 
-  .cta { text-align: center; padding: 8rem 0; }
-  .cta h2 { margin-bottom: 1rem; }
-  .cta p { color: var(--text-muted); font-size: 1.125rem; margin-bottom: 2rem; }
+  .cta { text-align: center; padding: 9rem 0; }
+  .cta h2 { margin-bottom: 1.25rem; max-width: 18ch; margin-inline: auto; }
+  .cta h2 em { color: var(--accent); }
+  .cta p { color: var(--text-soft); font-size: 1.1875rem; margin-bottom: 2.5rem; }
+  .cta .btn-group { justify-content: center; }
 
   /* ── FOOTER ─────────────────────────────────── */
 
-  footer {
-    border-top: 1px solid var(--border); padding: 3rem 0;
-  }
+  footer { border-top: 1px solid var(--border); padding: 4rem 0 3rem; }
   footer .container {
     display: flex; justify-content: space-between; align-items: flex-start;
-    flex-wrap: wrap; gap: 2rem;
+    flex-wrap: wrap; gap: 2.5rem;
   }
-  footer .footer-left { max-width: 320px; }
-  footer .footer-logo { font-weight: 700; font-size: 1rem; margin-bottom: 0.5rem; }
-  footer .footer-left p { color: var(--text-muted); font-size: 0.8125rem; }
-  footer .footer-links { display: flex; gap: 2rem; }
+  footer .footer-left { max-width: 340px; }
+  footer .footer-logo {
+    font-family: var(--serif); font-weight: 500; font-size: 1.375rem;
+    letter-spacing: -0.02em; margin-bottom: 0.75rem;
+  }
+  footer .footer-left p { color: var(--text-muted); font-size: 0.875rem; line-height: 1.6; }
+  footer .footer-links { display: flex; gap: 3rem; }
   footer .footer-links div h4 {
-    font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
-    letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 0.75rem;
+    font-family: var(--mono); font-size: 0.6875rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--text-muted); margin-bottom: 1rem;
   }
   footer .footer-links a {
-    display: block; color: var(--text-muted); text-decoration: none;
-    font-size: 0.875rem; margin-bottom: 0.375rem;
+    display: block; color: var(--text-soft); text-decoration: none;
+    font-size: 0.9375rem; margin-bottom: 0.55rem;
     transition: color 0.2s, transform 0.2s;
   }
-  footer .footer-links a:hover { color: var(--text); transform: translateX(3px); }
+  footer .footer-links a:hover { color: var(--accent); transform: translateX(3px); }
   footer .footer-bottom {
-    margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border);
+    margin-top: 3.5rem; padding-top: 1.75rem; border-top: 1px solid var(--border);
     font-size: 0.8125rem; color: var(--text-muted); text-align: center;
+    font-family: var(--mono);
   }
-
-  .note-banner {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 1rem 1.25rem;
-    margin-top: 2rem; font-size: 0.875rem; color: var(--text-muted);
-    transition: border-color 0.3s;
-  }
-  .note-banner:hover { border-color: var(--accent-dim); }
-  .note-banner a { color: var(--accent); font-weight: 500; }
-  .note-banner a:hover { text-decoration: underline; }
 
   /* ── RESPONSIVE ─────────────────────────────── */
 
-  @media (max-width: 640px) {
-    section { padding: 4rem 0; }
-    .hero { padding: 7rem 0 4rem; }
-    .hero .stats { gap: 1.5rem; }
-    .nav-links { display: none; }
-    footer .footer-links { flex-direction: column; gap: 1.5rem; }
-    .feature-row { grid-template-columns: 1fr; gap: 1.5rem; direction: ltr !important; padding: 1.5rem 0; }
+  @media (max-width: 720px) {
+    section { padding: 4.5rem 0; }
+    .hero { padding: 8rem 0 4.5rem; }
+    .nav-links li:not(:last-child) { display: none; }
+    footer .footer-links { flex-direction: column; gap: 2rem; }
+    .feature-row { grid-template-columns: 1fr; gap: 1.75rem; direction: ltr !important; padding: 2rem 0; }
     .feature-row.reverse .feature-content { direction: ltr; }
-    .feature-visual { order: -1; min-height: 100px; }
-    .bg-orb { width: 400px; height: 400px; top: -15%; }
+    .feature-visual { order: -1; min-height: 120px; }
+    .bg-orb { width: 440px; height: 440px; top: -16%; }
+    .step::after { display: none; }
   }
 
   /* ── REDUCED MOTION ─────────────────────────── */
@@ -354,6 +426,7 @@
       transition-duration: 0.01ms !important;
     }
     .reveal { opacity: 1; transform: none; }
+    .hero .stat { opacity: 1; transform: none; }
   }
 </style>
 </head>
@@ -362,12 +435,12 @@
 <!-- NAV ────────────────────────────────────────── -->
 <nav>
   <div class="container">
-    <div class="nav-logo">Morphe AutoBuilds Lite</div>
+    <div class="nav-logo">Morphe <b>AutoBuilds</b><span class="lite">Lite</span></div>
     <ul class="nav-links">
-      <li><a href="#what">What</a></li>
-      <li><a href="#apps">Apps</a></li>
-      <li><a href="#install">Install</a></li>
-      <li><a href="https://github.com/MithunWijayasiri/Morphe-AutoBuilds/releases/latest" target="_blank" rel="noopener">Download</a></li>
+      <li class="nav-page"><a href="#what">What</a></li>
+      <li class="nav-page"><a href="#apps">Apps</a></li>
+      <li class="nav-page"><a href="#install">Install</a></li>
+      <li><a href="https://github.com/MithunWijayasiri/Morphe-AutoBuilds/releases/latest" class="nav-cta" target="_blank" rel="noopener">Download ↓</a></li>
     </ul>
   </div>
 </nav>
@@ -376,11 +449,23 @@
 <div class="bg-orb"></div>
 <section class="hero">
   <div class="container">
-    <h1 class="reveal">Patch once.<br>Build forever.</h1>
+    <div class="hero-badge reveal"><span class="dot"></span> Rebuilt daily · always current</div>
+    <h1 class="display reveal">
+      Patch once.<br>
+      <span class="line2">Build <em>forever.</em></span>
+    </h1>
     <p class="subtitle reveal">
-      Automated, daily-patched APKs for 50+ Android apps.
-      Ad‑free, premium unlocked. No root. Always up to date.
+      Automated, daily-patched APKs for 50+ Android apps. Ad-free,
+      premium unlocked, no root — and never a stale version.
     </p>
+    <div class="btn-group reveal">
+      <a href="https://github.com/MithunWijayasiri/Morphe-AutoBuilds/releases/latest" class="btn btn-primary" target="_blank" rel="noopener">
+        ↓ Download latest
+      </a>
+      <a href="https://github.com/MithunWijayasiri/Morphe-AutoBuilds" class="btn btn-secondary" target="_blank" rel="noopener">
+        View on GitHub
+      </a>
+    </div>
     <div class="stats">
       <div class="stat">
         <div class="stat-number" data-count="50" data-suffix="+">0</div>
@@ -395,14 +480,6 @@
         <div class="stat-label">Architectures</div>
       </div>
     </div>
-    <div class="btn-group reveal">
-      <a href="https://github.com/MithunWijayasiri/Morphe-AutoBuilds/releases/latest" class="btn btn-primary" target="_blank" rel="noopener">
-        ↓ Download Latest
-      </a>
-      <a href="https://github.com/MithunWijayasiri/Morphe-AutoBuilds" class="btn btn-secondary" target="_blank" rel="noopener">
-        View on GitHub
-      </a>
-    </div>
   </div>
 </section>
 
@@ -410,28 +487,30 @@
 <section id="what">
   <div class="container">
     <div class="section-header reveal">
-      <span class="section-label">What you get</span>
-      <h2>Patch. Sign. Ship.</h2>
+      <span class="overline">What you get</span>
+      <h2 class="display">Patch. Sign. <em>Ship.</em></h2>
       <p>Every day, we download stock APKs, apply community patches, sign them, and publish — so you don't have to.</p>
     </div>
     <div class="features-list">
       <div class="feature-row reveal">
         <div class="feature-content">
+          <span class="feature-num">01</span>
           <h3>Rolling release, always fresh</h3>
           <p>Every day the pipeline checks for updates. New versions get patched and uploaded to the same release — no manual work, no stale APKs.</p>
         </div>
         <div class="feature-visual">
           <div class="feature-code">
             <span class="dim">$ check_app_updates.py</span><br>
-            → youtube: <span style="color:var(--accent);">new version</span><br>
-            → instagram: unchanged<br>
-            → tiktok: <span style="color:var(--accent);">new version</span><br>
-            <span style="color:var(--accent);">2 apps queued for rebuild</span>
+            → youtube: <span class="ok">new version</span><br>
+            → instagram: <span class="dim">unchanged</span><br>
+            → tiktok: <span class="ok">new version</span><br>
+            <span class="ok">2 apps queued for rebuild</span>
           </div>
         </div>
       </div>
       <div class="feature-row reverse reveal">
         <div class="feature-content">
+          <span class="feature-num">02</span>
           <h3>Three architectures, one keystore</h3>
           <p><span class="mono">arm64-v8a</span>, <span class="mono">armeabi-v7a</span>, and universal builds. All signed with the same key — update in place, no reinstall.</p>
         </div>
@@ -445,8 +524,9 @@
       </div>
       <div class="feature-row reveal">
         <div class="feature-content">
+          <span class="feature-num">03</span>
           <h3>Precise patch control per app</h3>
-          <p>Each app gets exactly the patches it needs through declarative config. Empty patch list = apply all. Specific list = cherry‑pick.</p>
+          <p>Each app gets exactly the patches it needs through declarative config. Empty patch list = apply all. Specific list = cherry-pick.</p>
         </div>
         <div class="feature-visual">
           <div class="feature-code">
@@ -455,14 +535,14 @@
             <span class="dim"># patches/tiktok-icysymmetra.txt</span><br>
             remove-ads<br>
             disable-login-wall<br>
-            <span style="color:var(--accent);">2 patches selected</span>
+            <span class="ok">2 patches selected</span>
           </div>
         </div>
       </div>
     </div>
     <div class="note-banner reveal">
-      <strong>MicroG‑RE required</strong> for patched Google apps to work without root.&nbsp;
-      <a href="https://github.com/MorpheApp/MicroG-RE/releases/latest" target="_blank" rel="noopener">Download MicroG‑RE →</a>
+      <span><strong>MicroG-RE required</strong> for patched Google apps to work without root.</span>
+      <a href="https://github.com/MorpheApp/MicroG-RE/releases/latest" target="_blank" rel="noopener">Download MicroG-RE →</a>
     </div>
   </div>
 </section>
@@ -471,13 +551,13 @@
 <section id="apps">
   <div class="container">
     <div class="section-header reveal">
-      <span class="section-label">Available apps</span>
-      <h2>50+ apps. Zero ads. All premium.</h2>
+      <span class="overline">Available apps</span>
+      <h2 class="display">50+ apps. Zero ads. <em>All premium.</em></h2>
       <p>YouTube, Instagram, TikTok, Telegram, and dozens more — patched and ready.</p>
     </div>
 
     <div class="apps-category reveal">
-      <h3>Ad‑free + background play</h3>
+      <h3>Ad-free + background play <span class="count">10</span></h3>
       <div class="apps-grid">
         <span class="app-tag">YouTube</span>
         <span class="app-tag">YouTube Music</span>
@@ -493,7 +573,7 @@
     </div>
 
     <div class="apps-category reveal">
-      <h3>Premium / Pro unlocked</h3>
+      <h3>Premium / Pro unlocked <span class="count">40</span></h3>
       <div class="apps-grid">
         <span class="app-tag">Telegram</span>
         <span class="app-tag">Pixiv</span>
@@ -540,7 +620,7 @@
     </div>
 
     <div class="apps-category reveal">
-      <h3>Watermark removed</h3>
+      <h3>Watermark removed <span class="count">2</span></h3>
       <div class="apps-grid">
         <span class="app-tag">CamScanner</span>
         <span class="app-tag">VN Video Editor</span>
@@ -553,8 +633,8 @@
 <section id="install">
   <div class="container">
     <div class="section-header reveal">
-      <span class="section-label">How to install</span>
-      <h2>Four steps. That's it.</h2>
+      <span class="overline">How to install</span>
+      <h2 class="display">Four steps. <em>That's it.</em></h2>
     </div>
     <div class="steps">
       <div class="step reveal">
@@ -580,11 +660,11 @@
 <!-- CTA ────────────────────────────────────────── -->
 <section class="cta">
   <div class="container">
-    <h2 class="reveal">Ready to un‑bloat your apps?</h2>
-    <p class="reveal">All builds are free, open‑source, and updated daily.</p>
+    <h2 class="display reveal">Ready to <em>un-bloat</em> your apps?</h2>
+    <p class="reveal">All builds are free, open-source, and updated daily.</p>
     <div class="btn-group reveal">
       <a href="https://github.com/MithunWijayasiri/Morphe-AutoBuilds/releases/latest" class="btn btn-primary" target="_blank" rel="noopener">
-        ↓ Download Latest
+        ↓ Download latest
       </a>
       <a href="https://github.com/MithunWijayasiri/Morphe-AutoBuilds" class="btn btn-secondary" target="_blank" rel="noopener">
         ⭐ Star on GitHub
@@ -611,7 +691,7 @@
         <h4>Powered by</h4>
         <a href="https://github.com/revanced" target="_blank" rel="noopener">ReVanced</a>
         <a href="https://github.com/MorpheApp" target="_blank" rel="noopener">Morphe</a>
-        <a href="https://github.com/MorpheApp/MicroG-RE" target="_blank" rel="noopener">MicroG‑RE</a>
+        <a href="https://github.com/MorpheApp/MicroG-RE" target="_blank" rel="noopener">MicroG-RE</a>
       </div>
     </div>
   </div>
@@ -657,7 +737,8 @@
     function tick(now) {
       const progress = Math.min((now - start) / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      el.textContent = Math.round(eased * target) + suffix;
+      const value = Math.round(eased * target);
+      el.innerHTML = value + (suffix ? '<span class="suffix">' + suffix + '</span>' : '');
       if (progress < 1) requestAnimationFrame(tick);
     }
     requestAnimationFrame(tick);

@@ -4,6 +4,8 @@ paths:
   - "scripts/**/*.py"
   - "patch-config.json"
   - "arch-config.json"
+  - "docs/index.html"
+  - "README.md"
 ---
 
 # Operations runbook
@@ -16,6 +18,7 @@ How-tos and pipeline/release detail. Field formats live in `config-reference.md`
 2. Optionally create `patches/<app>-<source>.txt` for include/exclude (may be empty).
 3. Add `{ "app_name": "<app>", "source": "<source>" }` to `patch-config.json`.
 4. Optionally add an `arch-config.json` override (default is `universal` only).
+5. Mirror in the landing page — see [Sync the landing page catalog](#sync-the-landing-page-catalog).
 
 `source` must already exist as `sources/<source>.json` with exact casing.
 
@@ -30,6 +33,15 @@ How-tos and pipeline/release detail. Field formats live in `config-reference.md`
    - `apps/aptoide/<app>.json`
 4. Delete `patches/<app>-<source>.txt` if it exists.
 5. **Never delete `sources/<source>.json`** — sources are shared across many apps.
+6. Mirror in the landing page — see [Sync the landing page catalog](#sync-the-landing-page-catalog).
+
+## Sync the landing page catalog
+
+`docs/index.html` hard-codes the app catalog; it is **not** generated from `patch-config.json`. Adding/removing an app means editing it by hand, or the public page drifts. README does **not** list apps — it links to the landing page, so the page is the canonical catalog. On any app add/remove, update in `docs/index.html`:
+
+- The matching `<span class="app-tag">…</span>` in the right `.apps-grid` (categories: ad-free + background play / premium-pro unlocked / watermark removed).
+- That category's `<span class="count">N</span>` in its `.apps-category h3`.
+- The total app figures if they cross a threshold: hero stat `data-count` ("Apps patched"), hero subtitle, apps-section `<h2>`, and the `<meta name="description">` — all currently say "50+".
 
 ## Fix a failing build
 
