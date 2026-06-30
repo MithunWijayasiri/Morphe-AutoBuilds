@@ -20,7 +20,7 @@ Patched APKs for 50+ Android apps — built daily, no root required.
 3. Install — allow unknown sources if prompted
 4. Done. Updates drop daily; re-download to update.
 
-> **MicroG-RE required** for patched apps to work without root. Download from [MorpheApp/MicroG-RE](https://github.com/MorpheApp/MicroG-RE/releases/latest).
+> **MicroG-RE required** for patched google apps to work without root. Download from [MorpheApp/MicroG-RE](https://github.com/MorpheApp/MicroG-RE/releases/latest).
 
 ## What you get
 
