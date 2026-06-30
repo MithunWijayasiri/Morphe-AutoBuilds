@@ -2,7 +2,7 @@
 
 ## What this is
 
-Daily pipeline: downloads stock APKs → patches with ReVanced/Morphe → signs → publishes multiple apps to a single rolling GitHub release. Repo is the build engine (`src/`, `scripts/`) + declarative config (`patch-config.json`, `arch-config.json`, `apps/`, `sources/`, `patches/`). Runs on GitHub Actions.
+**Morphe AutoBuilds Lite** . Daily pipeline: downloads stock APKs → patches with ReVanced/Morphe → signs → publishes multiple apps to a single rolling GitHub release. Repo is the build engine (`src/`, `scripts/`) + declarative config (`patch-config.json`, `arch-config.json`, `apps/`, `sources/`, `patches/`). Runs on GitHub Actions. `docs/` = GitHub Pages site (`index.html` landing page + `build.md`/`configuration.md` docs).
 
 ## Build / run
 

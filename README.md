@@ -1,6 +1,6 @@
 <div align="center">
 
-# Morphe AutoBuilds
+# Morphe AutoBuilds Lite
 
 [![Daily Build](https://img.shields.io/github/actions/workflow/status/MithunWijayasiri/Morphe-AutoBuilds/patch.yml?label=Daily%20Build&style=for-the-badge&color=2ea44f)](https://github.com/MithunWijayasiri/Morphe-AutoBuilds/actions/workflows/patch.yml)
 [![Latest Release](https://img.shields.io/github/v/release/MithunWijayasiri/Morphe-AutoBuilds?style=for-the-badge&label=Latest%20Release&color=0366d6)](https://github.com/MithunWijayasiri/Morphe-AutoBuilds/releases/latest)
@@ -29,18 +29,7 @@ Patched APKs for 50+ Android apps — rolling release, no root required.
 - **Consistent signing.** Same keystore every build — install once, update in place.
 - **Patch control.** Specific patches included or excluded per app using the ReVanced/Morphe toolchain.
 
-## Available apps
-
-| What's patched                         | Apps                                                                                                                                                                                                                                                                                                                                                                          |
-| :------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Ad-free, background play, SponsorBlock | YouTube                                                                                                                                                                                                                                                                                                                                                                       |
-| Ad-free, background play               | YouTube Music                                                                                                                                                                                                                                                                                                                                                                 |
-| Ad-free, download media                | Instagram                                                                                                                                                                                                                                                                                                                                                                     |
-| Ad-free                                | TikTok, Soundcloud, Threads, Reddit, Pinterest, Google News, Meme Generator                                                                                                                                                                                                                                                                                                   |
-| Remove watermark                       | CamScanner, VN Video Editor                                                                                                                                                                                                                                                                                                                                                   |
-| Unlock features                        | Telegram                                                                                                                                                                                                                                                                                                                                                                      |
-| Unlock pro / VIP                       | Niagara Launcher, Trakt, Nova Launcher                                                                                                                                                                                                                                                                                                                                        |
-| Unlock premium                         | Pixiv, Photomath, Busuu, Mimo, Lingory, Teuida, MacroFactor, MacroFactor Workout, Hevy, Strava, MyFitnessPal, SnoreLab, TickTick, MacroDroid, Tasker, Xodo, Solid Explorer, FX File Explorer, Smart Launcher, ibisPaint, Alarmo, Lumina, Mirinae, Document Scanner, Splitwise, My Expenses, Windy, Ventusky, Komoot, Mapy, Geocaching, Nomone, Number, ProtonMail, ProtonVPN, Eyecon, Wallcraft, Avocards, Podcast, RAR |
+Full app catalog → [landing page](https://mithunwijayasiri.github.io/Morphe-AutoBuilds)
 
 ## Disclaimer
 
