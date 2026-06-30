@@ -6,7 +6,7 @@
 [![Latest Release](https://img.shields.io/github/v/release/MithunWijayasiri/Morphe-AutoBuilds?style=for-the-badge&label=Latest%20Release&color=0366d6)](https://github.com/MithunWijayasiri/Morphe-AutoBuilds/releases/latest)
 [![License](https://img.shields.io/github/license/MithunWijayasiri/Morphe-AutoBuilds?style=for-the-badge&color=orange)](LICENSE)
 
-Patched APKs for 50+ Android apps — built daily, no root required.
+Patched APKs for 50+ Android apps — rolling release, no root required.
 
 [![Download Latest](https://img.shields.io/badge/Download%20Latest-0A0A0A?style=flat&logo=github&logoColor=white)](https://github.com/MithunWijayasiri/Morphe-AutoBuilds/releases/latest)
 [![Report Bug](https://img.shields.io/badge/Report%20Bug-0A0A0A?style=flat&logo=github&logoColor=white)](https://github.com/MithunWijayasiri/Morphe-AutoBuilds/issues)
@@ -18,13 +18,13 @@ Patched APKs for 50+ Android apps — built daily, no root required.
 1. Go to [Latest Release](https://github.com/MithunWijayasiri/Morphe-AutoBuilds/releases/latest)
 2. Download the APK for your app
 3. Install — allow unknown sources if prompted
-4. Done. Updates drop daily; re-download to update.
+4. Done. APKs update in the same release; check back for the latest.
 
 > **MicroG-RE required** for patched google apps to work without root. Download from [MorpheApp/MicroG-RE](https://github.com/MorpheApp/MicroG-RE/releases/latest).
 
 ## What you get
 
-- **Daily builds.** Fresh APKs every day — no manual work.
+- **Rolling release.** One release, APKs updated in-place — no manual work.
 - **Multi-architecture.** `arm64-v8a`, `armeabi-v7a`, and `universal` builds per app where relevant.
 - **Consistent signing.** Same keystore every build — install once, update in place.
 - **Patch control.** Specific patches included or excluded per app using the ReVanced/Morphe toolchain.

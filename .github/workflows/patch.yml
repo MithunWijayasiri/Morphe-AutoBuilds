@@ -336,7 +336,7 @@ jobs:
           sort -u current_assets.txt > release_assets.txt
 
           cat > release_notes.md << 'EOF'
-          # Morphe APKs - Auto Built
+          # Morphe APKs
 
           ## Available Apps
 
@@ -355,7 +355,7 @@ jobs:
 
           ## Build Information
 
-          - **Auto-built daily at 6 AM UTC**
+          - **Rolling release** — APKs updated daily if there is a new update
           - **Multiple architecture support** (arm64-v8a, armeabi-v7a, universal)
           - **MicroG-RE required** for patched Google apps to work. Download from [MorpheApp/MicroG-RE](https://github.com/MorpheApp/MicroG-RE/releases/latest).
 
